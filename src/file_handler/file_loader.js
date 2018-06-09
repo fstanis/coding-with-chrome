@@ -249,15 +249,22 @@ cwc.fileHandler.FileLoader.prototype.loadCWCFile = async function(data,
 
   // Handle tutorial data
   let tutorialInstance = this.helper.getInstance('tutorial');
-  if (tutorialInstance) {
-    tutorialInstance.setTutorial(file.getTutorial(userLanguage));
+  let tutorialPromise = false;
+  let tutorialSpec = file.getTutorial(userLanguage);
+  if (tutorialInstance && tutorialSpec) {
+    tutorialPromise = tutorialInstance.setTutorial(tutorialSpec);
   }
 
   // Handle sidebar icons
   let sidebarInstance = this.helper.getInstance('sidebar');
   if (sidebarInstance) {
     sidebarInstance.enableDescription(file.getDescription());
-    sidebarInstance.enableTutorial(file.getTutorial(userLanguage));
+    if (tutorialPromise) {
+      await tutorialPromise;
+      sidebarInstance.enableTutorial(tutorialInstance.hasTutorial());
+    } else {
+      sidebarInstance.enableTutorial(false);
+    }
     sidebarInstance.enableTour(file.getTour(userLanguage));
     sidebarInstance.showLibrary(true);
     sidebarInstance.showMedia(false);
