@@ -28,14 +28,15 @@ goog.require('soydata');
  * @constructor
  * @struct
  * @final
+ * @export
  */
 cwc.renderer.Helper = function() {};
 
 
 /**
- * @param {!string} content Content to modify.
+ * @param {string} content Content to modify.
  * @param {!cwc.file.Files} files
- * @return {!string}
+ * @return {string}
  * @export
  */
 cwc.renderer.Helper.prototype.injectFiles = function(content, files) {
@@ -48,9 +49,9 @@ cwc.renderer.Helper.prototype.injectFiles = function(content, files) {
 
 
 /**
- * @param {!string} content Content to modify.
+ * @param {string} content Content to modify.
  * @param {string=} baseURL
- * @return {!string}
+ * @return {string}
  * @export
  */
 cwc.renderer.Helper.prototype.injectURLs = function(content, baseURL) {
@@ -62,9 +63,9 @@ cwc.renderer.Helper.prototype.injectURLs = function(content, baseURL) {
 
 
 /**
- * @param {!string} content
+ * @param {string} content
  * @param {string=} baseURL
- * @return {!string}
+ * @return {string}
  * @export
  */
 cwc.renderer.Helper.prototype.cacheURLs = function(content, baseURL) {
@@ -81,7 +82,7 @@ cwc.renderer.Helper.prototype.cacheURLs = function(content, baseURL) {
 /**
  * @param {!Array} urls
  * @param {string=} baseURL
- * @return {!string}
+ * @return {string}
  * @export
  */
 cwc.renderer.Helper.prototype.getCachedURLs = function(urls, baseURL) {
@@ -104,7 +105,7 @@ cwc.renderer.Helper.prototype.getCachedURLs = function(urls, baseURL) {
  * @param {string=} header
  * @param {string=} css
  * @param {string=} javascript
- * @return {!string}
+ * @return {string}
  */
 cwc.renderer.Helper.prototype.getHTML = function(body, header, css,
     javascript) {
@@ -118,12 +119,12 @@ cwc.renderer.Helper.prototype.getHTML = function(body, header, css,
 
 
 /**
- * @param {!string} body
+ * @param {string} body
  * @param {string=} header
  * @param {string=} css
  * @param {string=} javascript
  * @param {string=} canvas
- * @return {!string}
+ * @return {string}
  */
 cwc.renderer.Helper.prototype.getHTMLCanvas = function(body, header, css,
     javascript, canvas = 'canvas-chrome') {
@@ -142,7 +143,7 @@ cwc.renderer.Helper.prototype.getHTMLCanvas = function(body, header, css,
  * @param {string=} header
  * @param {string=} css
  * @param {string=} javascript
- * @return {!string}
+ * @return {string}
  */
 cwc.renderer.Helper.prototype.getHTMLGrid = function(body, header, css,
     javascript) {
@@ -159,7 +160,7 @@ cwc.renderer.Helper.prototype.getHTMLGrid = function(body, header, css,
  * @param {string=} content
  * @param {string=} headers
  * @param {Object=} environ
- * @return {!string}
+ * @return {string}
  */
 cwc.renderer.Helper.prototype.getRunner = function(content, headers = [],
     environ = {}) {
@@ -191,7 +192,7 @@ cwc.renderer.Helper.prototype.getRunner = function(content, headers = [],
  * @param {string=} body
  * @param {string=} header
  * @param {Object=} environ
- * @return {!string}
+ * @return {string}
  */
 cwc.renderer.Helper.prototype.getHTMLRunner = function(body, header,
     environ = {}) {
@@ -206,9 +207,10 @@ cwc.renderer.Helper.prototype.getHTMLRunner = function(body, header,
 
 
 /**
- * @param {!string} html
+ * @param {string} html
  * @param {string=} header
- * @return {!string}
+ * @return {string}
+ * @export
  */
 cwc.renderer.Helper.prototype.getRawHTML = function(html, header) {
   if (!html) {
@@ -235,7 +237,7 @@ cwc.renderer.Helper.prototype.getRawHTML = function(html, header) {
  * @param {string=} javascript
  * @param {string=} header
  * @param {string=} body
- * @return {!string}
+ * @return {string}
  */
 cwc.renderer.Helper.prototype.getJavaScript = function(javascript, header,
     body) {
@@ -249,9 +251,9 @@ cwc.renderer.Helper.prototype.getJavaScript = function(javascript, header,
 
 /**
  * Returns data encoded content.
- * @param {!string} content
+ * @param {string} content
  * @param {string=} type
- * @return {!string}
+ * @return {string}
  * @export
  */
 cwc.renderer.Helper.prototype.getDataURL = function(content,
@@ -275,7 +277,7 @@ cwc.renderer.Helper.prototype.getDataURL = function(content,
 
 
 /**
- * @param {!string} content
+ * @param {string} content
  * @return {string}
  */
 cwc.renderer.Helper.prototype.getJavaScriptContent = function(content) {
@@ -286,7 +288,7 @@ cwc.renderer.Helper.prototype.getJavaScriptContent = function(content) {
 
 
 /**
- * @param {!string} url
+ * @param {string} url
  * @param {string=} filename
  * @param {string=} baseURL
  * @return {string}
@@ -303,7 +305,7 @@ cwc.renderer.Helper.prototype.getJavaScriptURL = function(url, filename,
 /**
  * @param {!Array.<string>} filenames
  * @param {string=} baseURL
- * @return {!string}
+ * @return {string}
  */
 cwc.renderer.Helper.prototype.getJavaScriptURLs = function(filenames, baseURL) {
   let headers = '';
@@ -315,7 +317,7 @@ cwc.renderer.Helper.prototype.getJavaScriptURLs = function(filenames, baseURL) {
 
 
 /**
- * @param {!string} data
+ * @param {string} data
  * @param {string=} encoding default: base64
  * @param {string=} filename
  * @return {string}
@@ -340,7 +342,7 @@ cwc.renderer.Helper.prototype.getJavaScriptDataURL = function(data,
 
 
 /**
- * @param {!string} url
+ * @param {string} url
  * @param {string=} filename
  * @param {string=} baseURL
  * @return {string}
@@ -355,7 +357,7 @@ cwc.renderer.Helper.prototype.getStyleSheetURL = function(url, filename,
 
 
 /**
- * @param {!string} data
+ * @param {string} data
  * @param {string=} encoding default: base64
  * @param {string=} filename
  * @return {string}
@@ -380,9 +382,9 @@ cwc.renderer.Helper.prototype.getStyleSheetDataURL = function(data,
 
 
 /**
- * @param {!string} name
+ * @param {string} name
  * @param {!cwc.Cache} cache
- * @return {!string}
+ * @return {string}
  */
 cwc.renderer.Helper.prototype.getCacheFileHeader = function(name, cache) {
   let fileContent = cache.getPreloadedFile(name);
@@ -396,7 +398,8 @@ cwc.renderer.Helper.prototype.getCacheFileHeader = function(name, cache) {
 /**
  * @param {!Array} names
  * @param {!cwc.Cache} cache
- * @return {!string}
+ * @return {string}
+ * @export
  */
 cwc.renderer.Helper.prototype.getCacheFilesHeader = function(names, cache) {
   let headers = '';
@@ -408,8 +411,8 @@ cwc.renderer.Helper.prototype.getCacheFilesHeader = function(names, cache) {
 
 
 /**
- * @param {!string} css
- * @return {!string}
+ * @param {string} css
+ * @return {string}
  * @suppress {invalidCasts}
  * @private
  */
@@ -419,8 +422,8 @@ cwc.renderer.Helper.prototype.sanitizedCss_ = function(css = '') {
 
 
 /**
- * @param {!string} javascript
- * @return {!string}
+ * @param {string} javascript
+ * @return {string}
  * @suppress {invalidCasts}
  * @private
  */
@@ -431,8 +434,8 @@ cwc.renderer.Helper.prototype.sanitizedJs_ = function(javascript = '') {
 
 
 /**
- * @param {!string} html
- * @return {!string}
+ * @param {string} html
+ * @return {string}
  * @suppress {invalidCasts}
  * @private
  */
@@ -442,8 +445,8 @@ cwc.renderer.Helper.prototype.sanitizedHtml_ = function(html = '') {
 
 
 /**
- * @param {!string} uri
- * @return {!string}
+ * @param {string} uri
+ * @return {string}
  * @suppress {invalidCasts}
  * @private
  */

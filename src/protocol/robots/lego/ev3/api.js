@@ -22,6 +22,7 @@
  */
 goog.provide('cwc.protocol.lego.ev3.Api');
 
+goog.require('cwc.lib.protocol.bluetoothChrome.Events');
 goog.require('cwc.protocol.lego.ev3.ColorSensorMode');
 goog.require('cwc.protocol.lego.ev3.Device');
 goog.require('cwc.protocol.lego.ev3.DeviceType');
@@ -44,6 +45,10 @@ goog.require('goog.events');
 goog.require('goog.events.EventTarget');
 
 
+goog.scope(function() {
+const BluetoothEvents =
+  goog.module.get('cwc.lib.protocol.bluetoothChrome.Events');
+
 /**
  * @constructor
  * @struct
@@ -56,13 +61,13 @@ cwc.protocol.lego.ev3.Api = function() {
   /** @type {boolean} */
   this.prepared = false;
 
-  /** @type {cwc.protocol.bluetooth.classic.Device} */
+  /** @type {cwc.lib.protocol.bluetoothChrome.Device} */
   this.device = null;
 
   /** @type {Object} */
   this.deviceData = {};
 
-  /** @type {!string} */
+  /** @type {string} */
   this.firmware = '';
 
   /** @type {!cwc.protocol.lego.ev3.Handler} */
@@ -75,7 +80,7 @@ cwc.protocol.lego.ev3.Api = function() {
   this.events_ = new cwc.utils.Events(this.name);
 
   /** @private {!goog.events.EventTarget} */
-  this.eventHandler_ = new goog.events.EventTarget();
+  this.eventTarget_ = new goog.events.EventTarget();
 
   /** @private {number} */
   this.eventTimerUpdatedDevices = null;
@@ -93,7 +98,7 @@ cwc.protocol.lego.ev3.Api = function() {
 
 /**
  * Connects the EV3 unit.
- * @param {!cwc.protocol.bluetooth.classic.Device} device
+ * @param {!cwc.lib.protocol.bluetoothChrome.Device} device
  * @return {boolean} Was able to prepare and connect to the EV3.
  * @export
  */
@@ -107,7 +112,7 @@ cwc.protocol.lego.ev3.Api.prototype.connect = function(device) {
 
   if (!this.prepared) {
     this.log_.info('Prepare bluetooth api for', device.getAddress());
-    this.eventHandler_.dispatchEvent(cwc.protocol.lego.ev3.Events.connect(
+    this.eventTarget_.dispatchEvent(cwc.protocol.lego.ev3.Events.connect(
       'Prepare EV3 api for' + device.getAddress(), 2));
     this.device = device;
     this.prepare();
@@ -118,7 +123,7 @@ cwc.protocol.lego.ev3.Api.prototype.connect = function(device) {
 
 
 /**
- * @return {!boolean}
+ * @return {boolean}
  */
 cwc.protocol.lego.ev3.Api.prototype.isConnected = function() {
   return (this.device && this.device.isConnected()) ? true : false;
@@ -129,8 +134,8 @@ cwc.protocol.lego.ev3.Api.prototype.isConnected = function() {
  * @export
  */
 cwc.protocol.lego.ev3.Api.prototype.prepare = function() {
-  this.events_.listen(this.device.getEventHandler(),
-    cwc.protocol.bluetooth.classic.Events.Type.ON_RECEIVE,
+  this.events_.listen(this.device.getEventTarget(),
+    BluetoothEvents.Type.ON_RECEIVE,
     this.handleOnReceive_.bind(this));
   this.exec('playTone', {'frequency': 2000, 'duration': 200, 'volume': 25});
   this.exec('getFirmware');
@@ -140,7 +145,7 @@ cwc.protocol.lego.ev3.Api.prototype.prepare = function() {
   this.drawLogo_();
   this.prepared = true;
   this.log_.info('Bluetooth API prepared for', this.device.getAddress());
-  this.eventHandler_.dispatchEvent(cwc.protocol.lego.ev3.Events.connect(
+  this.eventTarget_.dispatchEvent(cwc.protocol.lego.ev3.Events.connect(
     'Ready ...', 3));
 };
 
@@ -169,7 +174,7 @@ cwc.protocol.lego.ev3.Api.prototype.reset = function() {
 
 /**
  * Executer for the default handler commands.
- * @param {!string} command
+ * @param {string} command
  * @param {Object=} data
  * @export
  */
@@ -190,7 +195,7 @@ cwc.protocol.lego.ev3.Api.prototype.send = function(buffer) {
 
 
 /**
- * @param {!string} command
+ * @param {string} command
  * @param {Object=} data
  * @return {!ArrayBuffer}
  * @export
@@ -211,8 +216,8 @@ cwc.protocol.lego.ev3.Api.prototype.getDeviceData = function() {
 /**
  * @return {!goog.events.EventTarget}
  */
-cwc.protocol.lego.ev3.Api.prototype.getEventHandler = function() {
-  return this.eventHandler_;
+cwc.protocol.lego.ev3.Api.prototype.getEventTarget = function() {
+  return this.eventTarget_;
 };
 
 
@@ -229,7 +234,7 @@ cwc.protocol.lego.ev3.Api.prototype.setSensorMode = function(data) {
 
 
 /**
- * @param {!boolean} enable
+ * @param {boolean} enable
  * @export
  */
 cwc.protocol.lego.ev3.Api.prototype.monitor = function(enable) {
@@ -338,7 +343,7 @@ cwc.protocol.lego.ev3.Api.prototype.handleOnReceive_ = function(e) {
 
 /**
  * @param {!cwc.protocol.lego.ev3.InputPort} port
- * @param {!number} value
+ * @param {number} value
  * @private
  */
 cwc.protocol.lego.ev3.Api.prototype.updateDeviceData_ = function(port, value) {
@@ -347,7 +352,7 @@ cwc.protocol.lego.ev3.Api.prototype.updateDeviceData_ = function(port, value) {
     return;
   }
   this.deviceData[port] = value;
-  this.eventHandler_.dispatchEvent(
+  this.eventTarget_.dispatchEvent(
     cwc.protocol.lego.ev3.Events.changedSensorValue(
       port, value, this.devices_['port'][port].type));
 };
@@ -355,7 +360,7 @@ cwc.protocol.lego.ev3.Api.prototype.updateDeviceData_ = function(port, value) {
 
 /**
  * @param {!cwc.protocol.lego.ev3.InputPort} port
- * @param {!string} type
+ * @param {string} type
  * @private
  */
 cwc.protocol.lego.ev3.Api.prototype.updateDeviceType_ = function(port, type) {
@@ -364,7 +369,8 @@ cwc.protocol.lego.ev3.Api.prototype.updateDeviceType_ = function(port, type) {
     this.log_.error('PLEASE RESTART THE EV3 TO FIX THIS ERROR !');
     return;
   }
-  if (!type || type === cwc.protocol.lego.ev3.DeviceType.UNKNOWN) {
+  if (!type || type === cwc.protocol.lego.ev3.DeviceType.UNKNOWN ||
+       type === cwc.protocol.lego.ev3.DeviceType.FREE) {
     this.log_.error('Unknown device on port', port, '!');
     this.log_.error('Please re-connect device on port', port, '!');
     return;
@@ -426,7 +432,7 @@ cwc.protocol.lego.ev3.Api.prototype.updateDeviceType_ = function(port, type) {
         this.handler.setDevices_(this.devices_);
       }
 
-      this.eventHandler_.dispatchEvent(
+      this.eventTarget_.dispatchEvent(
         cwc.protocol.lego.ev3.Events.changedDevices(this.devices_));
     }, 50);
   }
@@ -462,3 +468,4 @@ cwc.protocol.lego.ev3.Api.prototype.drawLogo_ = function() {
 
   this.exec('drawUpdate');
 };
+});

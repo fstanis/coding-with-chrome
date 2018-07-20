@@ -1,5 +1,5 @@
 /**
- * @fileoverview EV3 Communication buffer
+ * @fileoverview Lego EV3 Communication buffer
  *
  * @license Copyright 2015 The Coding with Chrome Authors.
  *
@@ -98,7 +98,7 @@ cwc.protocol.lego.ev3.Buffer.prototype.writePort = function(port) {
 
 
 /**
- * @param {!number} ports
+ * @param {number} ports
  * @return {THIS}
  * @template THIS
  */

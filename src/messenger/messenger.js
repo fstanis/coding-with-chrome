@@ -27,12 +27,12 @@ goog.require('goog.events.EventTarget');
 
 
 /**
- * @param {goog.events.EventTarget=} eventHandler
+ * @param {goog.events.EventTarget=} eventTarget
  * @constructor
  * @struct
  * @final
  */
-cwc.Messenger = function(eventHandler) {
+cwc.Messenger = function(eventTarget) {
   /** @type {string} */
   this.name = 'Messenger';
 
@@ -45,14 +45,14 @@ cwc.Messenger = function(eventHandler) {
   /** @type {Object} */
   this.target = null;
 
-  /** @type {!string} */
+  /** @type {string} */
   this.targetOrigin = '*';
 
   /** @private {!cwc.utils.Events} */
   this.events_ = new cwc.utils.Events(this.name, '', this);
 
   /** @private {!goog.events.EventTarget} */
-  this.eventHandler_ = eventHandler || new goog.events.EventTarget();
+  this.eventTarget_ = eventTarget || new goog.events.EventTarget();
 
   /** @private {!cwc.utils.Logger} */
   this.log_ = new cwc.utils.Logger(this.name);
@@ -63,7 +63,7 @@ cwc.Messenger = function(eventHandler) {
   /** @private {Object} */
   this.listenerScope_ = this;
 
-  /** @type {!string} */
+  /** @type {string} */
   this.token_ = String(new Date().getTime());
 
   // External listener
@@ -73,7 +73,7 @@ cwc.Messenger = function(eventHandler) {
 
 /**
  * Adds the command to the listener.
- * @param {!string} name
+ * @param {string} name
  * @param {!Function} func
  * @param {?=} scope
  * @return {THIS}
@@ -108,15 +108,16 @@ cwc.Messenger.prototype.addApiListener = function(api) {
     this.log_.error('Invalid api', api);
     return;
   }
-  if (!api.handler) {
+  let apiHandler = api.handler || api.getHandler();
+  if (!apiHandler) {
     this.log_.error('Unable to get api handler for', api);
     return;
   }
-  if (!api.handler.__proto__) {
-    this.log_.error('Unable to detect api any commands', api.handler);
+  if (!apiHandler.__proto__) {
+    this.log_.error('Unable to detect api any commands', apiHandler);
     return;
   }
-  let commandList = Object.getOwnPropertyNames(api.handler.__proto__);
+  let commandList = Object.getOwnPropertyNames(apiHandler.__proto__);
   for (let i = 0; i < commandList.length; i++) {
     let command = commandList[i];
     if (!command.endsWith('_') && !command.endsWith('_$') &&
@@ -130,14 +131,14 @@ cwc.Messenger.prototype.addApiListener = function(api) {
 
 
 /**
- * @param {EventTarget|goog.events.Listenable} eventHandler
- * @param {!string} event
- * @param {!string} command
+ * @param {EventTarget|goog.events.Listenable} eventTarget
+ * @param {string} event
+ * @param {string} command
  * @export
  */
-cwc.Messenger.prototype.addEventListener = function(eventHandler, event,
+cwc.Messenger.prototype.addEventListener = function(eventTarget, event,
     command) {
-  this.events_.listen(eventHandler, event, function(e) {
+  this.events_.listen(eventTarget, event, function(e) {
     this.send(command, {
       'data': e.data,
       'source': e.source,
@@ -163,7 +164,7 @@ cwc.Messenger.prototype.send = function(name, value = {}) {
 
 
 /**
- * @param {!string} appOrigin
+ * @param {string} appOrigin
  * @export
  */
 cwc.Messenger.prototype.setAppOrigin = function(appOrigin) {
@@ -194,8 +195,14 @@ cwc.Messenger.prototype.setTarget = function(target) {
   }
   this.target = target;
   this.events_.listen(window, 'message', this.handleMessage_);
-  this.target.addEventListener('contentload',
+
+  // Detected when target is possible loaded and ready.
+  if (target.nodeName === 'IFRAME') {
+    this.target['onload'] = this.handleContentLoad_.bind(this);
+  } else {
+    this.target.addEventListener('contentload',
       this.handleContentLoad_.bind(this), false);
+  }
 };
 
 
@@ -265,7 +272,7 @@ cwc.Messenger.prototype.handleMessage_ = function(event) {
     throw new Error('Name ' + event['data']['name'] + ' is not defined!');
   }
   this.listener_[event['data']['name']](event['data']['value']);
-  this.eventHandler_.dispatchEvent(cwc.MessengerEvents.execCommand(
+  this.eventTarget_.dispatchEvent(cwc.MessengerEvents.execCommand(
     event['data']['name'], event['data']['value']));
 };
 

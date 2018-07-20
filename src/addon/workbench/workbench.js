@@ -124,7 +124,7 @@ const tagMap = {
  * @final
  */
 cwc.addon.Workbench = function(helper) {
-  /** @type {!string} */
+  /** @type {string} */
   this.name = 'Workbench';
 
   /** @type {!cwc.utils.Helper} */
@@ -162,7 +162,6 @@ cwc.addon.Workbench = function(helper) {
 
 /**
  * @private
- * @async
  */
 cwc.addon.Workbench.prototype.prepare = async function() {
   if (!this.helper.experimentalEnabled()) {
@@ -178,7 +177,7 @@ cwc.addon.Workbench.prototype.prepare = async function() {
 
   let selectScreenInstance = this.helper.getInstance('selectScreen');
   if (selectScreenInstance) {
-    goog.events.listen(selectScreenInstance.getEventHandler(),
+    goog.events.listen(selectScreenInstance.getEventTarget(),
       cwc.ui.SelectScreen.Events.Type.VIEW_CHANGE,
       this.showRelevantProjects_, false, this);
   }
@@ -216,7 +215,6 @@ cwc.addon.Workbench.prototype.filterProjectsByTag_ = function(
 
 /**
  * @private
- * @async
  */
 cwc.addon.Workbench.prototype.showRelevantProjects_ = async function() {
   const allProjects = await this.getAllProjects_();

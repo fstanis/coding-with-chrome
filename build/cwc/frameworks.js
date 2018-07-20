@@ -22,7 +22,7 @@ let glob = closureBuilder.globSupport();
 
 
 /**
- * EV3 Framework
+ * Lego EV3 Framework
  */
 closureBuilder.build({
   name: 'cwc.framework.lego.Ev3',
@@ -33,9 +33,27 @@ closureBuilder.build({
   deps: glob([
     'src/frameworks/internal/messenger/*.js',
     'src/protocol/robots/lego/ev3/*.js',
-    'src/utils/stack_queue.js',
+    'third_party/coding-with-chrome-libraries/src/utils/stack/stack.js',
   ]),
   out: 'genfiles/core/frameworks/internal/ev3_framework.js',
+});
+
+
+/**
+ * Lego WeDo 2.0 Framework
+ */
+closureBuilder.build({
+  name: 'cwc.framework.lego.WeDo2',
+  compress: true,
+  srcs: glob([
+    'src/frameworks/internal/lego/wedo2/*.js',
+  ]),
+  deps: glob([
+    'src/frameworks/internal/messenger/*.js',
+    'src/protocol/robots/lego/wedo2/*.js',
+    'third_party/coding-with-chrome-libraries/src/utils/stack/stack.js',
+  ]),
+  out: 'genfiles/core/frameworks/internal/wedo2_framework.js',
 });
 
 
@@ -87,7 +105,7 @@ closureBuilder.build({
   ]),
   deps: glob([
     'src/frameworks/internal/messenger/*.js',
-    'src/utils/stack_queue.js',
+    'third_party/coding-with-chrome-libraries/src/utils/stack/stack.js',
   ]),
   out: 'genfiles/core/frameworks/internal/mbot_framework.js',
 });
@@ -104,7 +122,7 @@ closureBuilder.build({
   ]),
   deps: glob([
     'src/frameworks/internal/messenger/*.js',
-    'src/utils/stack_queue.js',
+    'third_party/coding-with-chrome-libraries/src/utils/stack/stack.js',
   ]),
   out: 'genfiles/core/frameworks/internal/mbot_ranger_framework.js',
 });
@@ -118,7 +136,9 @@ closureBuilder.build({
   compress: true,
   srcs: glob([
     'src/frameworks/internal/messenger/*.js',
-    'src/utils/stack_queue.js',
+  ]),
+  deps: glob([
+    'third_party/coding-with-chrome-libraries/src/utils/stack/stack.js',
   ]),
   externs: [],
   out: 'genfiles/core/frameworks/internal/messenger_framework.js',
@@ -136,7 +156,7 @@ closureBuilder.build({
   ]),
   deps: glob([
     'src/frameworks/internal/messenger/*.js',
-    'src/utils/stack_queue.js',
+    'third_party/coding-with-chrome-libraries/src/utils/stack/stack.js',
   ]),
   externs: [
     'build/externs/phaser.js',
@@ -156,7 +176,7 @@ closureBuilder.build({
   ]),
   deps: glob([
     'src/frameworks/internal/messenger/*.js',
-    'src/utils/stack_queue.js',
+    'third_party/coding-with-chrome-libraries/src/utils/stack/stack.js',
   ]),
   out: 'genfiles/core/frameworks/internal/raspberry_pi_framework.js',
 });
@@ -176,7 +196,7 @@ closureBuilder.build({
     'src/frameworks/internal/messenger/*.js',
     'src/utils/dialog/*',
     'src/utils/logger.js',
-    'src/utils/stack_queue.js',
+    'third_party/coding-with-chrome-libraries/src/utils/stack/stack.js',
   ]),
   out: 'genfiles/core/frameworks/internal/simple_framework.js',
 });
@@ -193,7 +213,7 @@ closureBuilder.build({
   ]),
   deps: glob([
     'src/frameworks/internal/messenger/*.js',
-    'src/utils/stack_queue.js',
+    'third_party/coding-with-chrome-libraries/src/utils/stack/stack.js',
   ]),
   out: 'genfiles/core/frameworks/internal/sphero_framework.js',
 });

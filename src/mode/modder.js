@@ -55,7 +55,7 @@ cwc.mode.Modder = function(helper) {
   this.log_ = new cwc.utils.Logger(this.name);
 
   /** @private {!goog.events.EventTarget} */
-  this.eventHandler_ = new goog.events.EventTarget();
+  this.eventTarget_ = new goog.events.EventTarget();
 
   /** @private {string} */
   this.templatePath_ = '../resources/templates/';
@@ -89,20 +89,21 @@ cwc.mode.Modder.prototype.setMode = function(mode) {
   // Remove former informations.
   this.setFilename();
 
-  // Remove former instances.
-  this.helper.setInstance('blockly', null, true);
-  this.helper.setInstance('editor', null, true);
-  this.helper.setInstance('message', null, true);
-  this.helper.setInstance('preview', null, true);
-  this.helper.setInstance('turtle', null, true);
+  // Clear former instances.
+  this.helper.clearInstance('blockly');
+  this.helper.clearInstance('editor');
+  this.helper.clearInstance('message');
+  this.helper.clearInstance('preview');
+  this.helper.clearInstance('turtle');
 
   // Update navigation view
   let navigationInstance = this.helper.getInstance('navigation');
   if (navigationInstance) {
-    if (modeConfig.title) {
-      navigationInstance.setHeader(modeConfig.title, modeConfig.icon);
-    }
+    navigationInstance.enableOverview(true);
     navigationInstance.enableSaveFile(true);
+    if (modeConfig.name) {
+      navigationInstance.setHeader(modeConfig.name, modeConfig.icon);
+    }
   }
 
   // End existing tours.
@@ -198,7 +199,7 @@ cwc.mode.Modder.prototype.postMode = function(mode = this.mode) {
   this.postModeFileData();
 
   // Event Handling
-  this.eventHandler_.dispatchEvent(
+  this.eventTarget_.dispatchEvent(
     cwc.mode.Modder.Events.changeMode(this.mode, this.filename));
 };
 
@@ -266,8 +267,8 @@ cwc.mode.Modder.prototype.postModeFileData = function() {
 
 
 /**
- * @param {!string} name
- * @param {!string} content
+ * @param {string} name
+ * @param {string} content
  */
 cwc.mode.Modder.prototype.addBlocklyView = function(name, content) {
   let blocklyInstance = this.helper.getInstance('blockly');
@@ -278,7 +279,7 @@ cwc.mode.Modder.prototype.addBlocklyView = function(name, content) {
 
 
 /**
- * @param {!string} name
+ * @param {string} name
  * @param {string=} content
  * @param {cwc.ui.EditorType=} type
  * @param {cwc.ui.EditorHint=} hints
@@ -292,7 +293,7 @@ cwc.mode.Modder.prototype.addEditorView = function(name, content, type, hints) {
 
 
 /**
- * @param {!string} name
+ * @param {string} name
  */
 cwc.mode.Modder.prototype.setEditorView = function(name) {
   let editorInstance = this.helper.getInstance('editor');
@@ -370,6 +371,6 @@ cwc.mode.Modder.prototype.setTitle = function(title) {
 /**
  * @return {!goog.events.EventTarget}
  */
-cwc.mode.Modder.prototype.getEventHandler = function() {
-  return this.eventHandler_;
+cwc.mode.Modder.prototype.getEventTarget = function() {
+  return this.eventTarget_;
 };

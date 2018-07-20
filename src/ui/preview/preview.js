@@ -33,6 +33,7 @@ goog.require('goog.dom.ViewportSizeMonitor');
 goog.require('goog.events.EventTarget');
 goog.require('goog.events.EventType');
 goog.require('goog.soy');
+goog.require('goog.string');
 goog.require('goog.ui.Component.EventType');
 
 
@@ -41,6 +42,7 @@ goog.require('goog.ui.Component.EventType');
  * @constructor
  * @struct
  * @final
+ * @export
  */
 cwc.ui.Preview = function(helper) {
   /** @type {string} */
@@ -91,7 +93,7 @@ cwc.ui.Preview = function(helper) {
   /** @private {!Object.<number>} */
   this.eventTimer_ = {};
 
-  /** @private {!boolean} */
+  /** @private {boolean} */
   this.enableMessenger_ = false;
 
   /** @private {!cwc.ui.PreviewStatus} */
@@ -103,20 +105,21 @@ cwc.ui.Preview = function(helper) {
   /** @private {!cwc.Messenger} */
   this.messenger_ = new cwc.Messenger(this.eventHandler_);
 
-  /** @private {!string} */
-  this.partition_ = 'preview';
-
-  /** @private {!boolean} */
+  /** @private {boolean} */
   this.webviewSupport_ = this.helper.checkChromeFeature('webview');
 
   /** @private {!cwc.utils.Logger|null} */
   this.log_ = new cwc.utils.Logger(this.name);
+
+  /** @private {!Object<string, Function>} */
+  this.pendingExecCallbacks = {};
 };
 
 
 /**
  * Decorates the given node and adds the preview window.
  * @param {Element=} node The target node to add the preview window.
+ * @export
  */
 cwc.ui.Preview.prototype.decorate = function(node) {
   this.node = node || goog.dom.getElement(this.prefix + 'chrome');
@@ -146,7 +149,7 @@ cwc.ui.Preview.prototype.decorate = function(node) {
   // Adding cleanup handler event
   let layoutInstance = this.helper.getInstance('layout');
   if (layoutInstance) {
-    this.events_.listen(layoutInstance.getEventHandler(),
+    this.events_.listen(layoutInstance.getEventTarget(),
       goog.events.EventType.UNLOAD, this.cleanUp);
   }
 
@@ -155,10 +158,14 @@ cwc.ui.Preview.prototype.decorate = function(node) {
     this.events_.listen(new goog.dom.ViewportSizeMonitor(),
       goog.events.EventType.RESIZE, this.handleRefresh_);
     if (layoutInstance) {
-      this.events_.listen(layoutInstance.getEventHandler(),
+      this.events_.listen(layoutInstance.getEventTarget(),
         goog.events.EventType.DRAGEND, this.handleRefresh_);
     }
   }
+
+  // Adding Messenger listener
+  this.messenger_.addListener(
+    '__exec_result__', this.handleExecResponse_, this);
 };
 
 
@@ -178,9 +185,7 @@ cwc.ui.Preview.prototype.decorateStatusButton = function(node) {
       this.helper.getInstance('layout').setFullscreenPreview(false);
       this.refresh();
     })
-    .setReloadAction(() => {
-      this.refresh();
-    })
+    .setReloadAction(this.refresh.bind(this))
     .setTerminateAction(this.terminate.bind(this))
     .setRunAction(() => {
       this.run();
@@ -225,10 +230,8 @@ cwc.ui.Preview.prototype.render = function() {
  * @return {!Object}
  */
 cwc.ui.Preview.prototype.renderIframe = function() {
-  if (this.content) {
-    goog.dom.removeChildren(this.nodeRuntime);
-  }
   let content = document.createElement('iframe');
+  this.previewStatus_.addEventHandlerIframe(content);
   return content;
 };
 
@@ -239,9 +242,9 @@ cwc.ui.Preview.prototype.renderIframe = function() {
  */
 cwc.ui.Preview.prototype.renderWebview = function() {
   let content = document.createElement('webview');
-  content['setAttribute']('partition', this.partition_);
+  content['setAttribute']('partition', 'preview');
   content['setUserAgentOverride']('CwC sandbox');
-  this.previewStatus_.addEventHandler(content);
+  this.previewStatus_.addEventHandlerWebview(content);
   return content;
 };
 
@@ -257,7 +260,7 @@ cwc.ui.Preview.prototype.enableMessenger = function(enable = true) {
 /**
  * @return {!goog.events.EventTarget}
  */
-cwc.ui.Preview.prototype.getEventHandler = function() {
+cwc.ui.Preview.prototype.getEventTarget = function() {
   return this.eventHandler_;
 };
 
@@ -347,6 +350,7 @@ cwc.ui.Preview.prototype.terminate = function() {
 
 /**
  * @return {Object}
+ * @export
  */
 cwc.ui.Preview.prototype.getContent = function() {
   return this.content;
@@ -355,7 +359,7 @@ cwc.ui.Preview.prototype.getContent = function() {
 
 /**
  * Gets the content url from the renderer.
- * @return {!string}
+ * @return {string}
  */
 cwc.ui.Preview.prototype.getContentUrl = function() {
   let rendererInstance = this.helper.getInstance('renderer', true);
@@ -368,7 +372,8 @@ cwc.ui.Preview.prototype.getContentUrl = function() {
 
 
 /**
- * @param {!string} url
+ * @param {string} url
+ * @export
  */
 cwc.ui.Preview.prototype.setContentUrl = function(url) {
   if (!url || !this.content) {
@@ -417,7 +422,7 @@ cwc.ui.Preview.prototype.setAutoUpdate = function(active) {
   this.log_.info('Activate AutoUpdate...');
   let editorInstance = this.helper.getInstance('editor');
   if (editorInstance) {
-    let editorEventHandler = editorInstance.getEventHandler();
+    let editorEventHandler = editorInstance.getEventTarget();
     this.autoUpdateEvent = goog.events.listen(editorEventHandler,
         goog.ui.Component.EventType.CHANGE, this.delayAutoUpdate, false,
         this);
@@ -465,11 +470,73 @@ cwc.ui.Preview.prototype.focus = function() {
 /**
  * Injects and executes the passed code in the preview content, if supported.
  * @param {!(string|Function)} code
+ * @param {Number=} timeout
+ * @return {!Promise}
+ * @export
+ * @todo(carheden@google.com): Move logic to messenger instance.
  */
-cwc.ui.Preview.prototype.executeScript = function(code) {
+cwc.ui.Preview.prototype.executeScript = function(code, timeout = 250) {
   this.log_.info('Execute script', code);
-  this.messenger_.send('__exec__',
-    typeof code === 'function' ? code.toString() : code);
+  let execSpec = {
+    'code': typeof code === 'function' ? code.toString() : code,
+    'id': goog.string.createUniqueString(),
+  };
+  return new Promise((resolve, reject) => {
+    this.pendingExecCallbacks[execSpec['id']] = resolve;
+    setTimeout(function() {
+      if (this.pendingExecCallbacks.hasOwnProperty(execSpec['id'])) {
+        this.pendingExecCallbacks[execSpec['id']] = false;
+        reject(`Preview script timed out after ${timeout}ms`);
+      }
+    }.bind(this), timeout);
+    this.messenger_.send('__exec__', execSpec);
+  });
+};
+
+
+/**
+ * Calls the callback registered for the script execution
+ * @param {Object} response
+ * @private
+ * @todo(carheden@google.com): Move logic to messenger instance.
+ */
+cwc.ui.Preview.prototype.handleExecResponse_ = function(response) {
+  if ((typeof response) !== 'object') {
+    this.log_.warn('Received non-object as response from script execution',
+      response);
+    return;
+  }
+  if (!response.hasOwnProperty('id') || typeof response['id'] !== 'string') {
+    this.log_.warn('ExecuteScript received a none valid id', response['id']);
+    return;
+  }
+  // The callback is called from setTimeout() to give the executeScript timeout
+  // a chance to run first. When run in a WebView, the preview runs in a
+  // separate thread and the executeScript timeout will have already triggered
+  // if the user's functon exceeded the timeout. However, iframes run in the
+  // same thread, so a long-running script will prevent the executeScript
+  // timeout from firing until the it completes.
+  // This does make timeouts ineffective for iframes, but ensuring the correct
+  // order allows test logic to execute correctly in karma/chrome (which only
+  // supports iframes).
+  setTimeout(() => {
+    if (!this.pendingExecCallbacks.hasOwnProperty(response['id'])) {
+      this.log_.warn('Callback for executeScript response', response['id'],
+        'missing. Response was', response);
+      return;
+    }
+    let callback = this.pendingExecCallbacks[response['id']];
+    delete this.pendingExecCallbacks[response['id']];
+    if (callback === false) {
+      this.log_.info('executeScript ', response['id'], 'timed out');
+      return;
+    }
+    if (response.hasOwnProperty('result')) {
+      this.log_.info('Executing callback ', response['id'], 'with result',
+        response['result']);
+      callback(response['result']);
+    }
+  }, 0);
 };
 
 

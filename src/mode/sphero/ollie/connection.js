@@ -19,13 +19,16 @@
  */
 goog.provide('cwc.mode.sphero.ollie.Connection');
 
-goog.require('cwc.protocol.bluetooth.lowEnergy.supportedDevices');
+goog.require('cwc.lib.protocol.bluetoothWeb.profile.Device');
 goog.require('cwc.protocol.sphero.v1.Api');
 goog.require('cwc.utils.Events');
 
 goog.require('goog.Timer');
 
 
+goog.scope(function() {
+const BluetoothProfile =
+  goog.module.get('cwc.lib.protocol.bluetoothWeb.profile.Device');
 /**
  * @constructor
  * @param {!cwc.utils.Helper} helper
@@ -40,17 +43,20 @@ cwc.mode.sphero.ollie.Connection = function(helper) {
   /** @type {goog.Timer} */
   this.connectMonitor = null;
 
-  /** @type {!number} */
+  /** @type {number} */
   this.connectMonitorInterval = 5000;
 
   /** @private {!cwc.protocol.sphero.v1.Api} */
   this.api_ = new cwc.protocol.sphero.v1.Api();
 
   /** @private {goog.events.EventTarget} */
-  this.apiEvents_ = this.api_.getEventHandler();
+  this.apiEvents_ = this.api_.getEventTarget();
 
   /** @private {!cwc.utils.Events} */
   this.events_ = new cwc.utils.Events(this.name);
+
+  /** @private {!cwc.lib.protocol.bluetoothWeb.profile.Device.Device} */
+  this.device_ = BluetoothProfile.SPHERO_OLLIE;
 };
 
 
@@ -65,15 +71,14 @@ cwc.mode.sphero.ollie.Connection.prototype.init = function() {
       this.connect.bind(this));
   }
   let connectScreenInstance = this.helper.getInstance('connectScreen');
-  connectScreenInstance.requestBluetoothDevice(
-    cwc.protocol.bluetooth.lowEnergy.supportedDevices.SPHERO_OLLIE
-  ).then((bluetoothDevice) => {
-    bluetoothDevice.connect().then((device) => {
-      this.api_.connect(device);
+  connectScreenInstance.requestBluetoothDevice(this.device_).then(
+    (bluetoothDevice) => {
+      bluetoothDevice.connect().then((device) => {
+        this.api_.connect(device);
+      });
+    }).catch(() => {
+      this.connectMonitor.start();
     });
-  }).catch(() => {
-    this.connectMonitor.start();
-  });
 };
 
 
@@ -84,9 +89,8 @@ cwc.mode.sphero.ollie.Connection.prototype.init = function() {
  */
 cwc.mode.sphero.ollie.Connection.prototype.connect = function(opt_event) {
   if (!this.isConnected()) {
-    let bluetoothInstance = this.helper.getInstance('bluetoothLE', true);
-    let devices = bluetoothInstance.getDevicesByName(
-      cwc.protocol.bluetooth.lowEnergy.supportedDevices.SPHERO_OLLIE.name);
+    let bluetoothInstance = this.helper.getInstance('bluetoothWeb', true);
+    let devices = bluetoothInstance.getDevicesByName(this.device_.name);
     if (devices) {
       devices[0].connect().then((device) => {
         this.api_.connect(device);
@@ -118,7 +122,7 @@ cwc.mode.sphero.ollie.Connection.prototype.reset = function(opt_event) {
 
 
 /**
- * @return {!boolean}
+ * @return {boolean}
  * @export
  */
 cwc.mode.sphero.ollie.Connection.prototype.isConnected = function() {
@@ -129,8 +133,8 @@ cwc.mode.sphero.ollie.Connection.prototype.isConnected = function() {
 /**
  * @return {goog.events.EventTarget}
  */
-cwc.mode.sphero.ollie.Connection.prototype.getEventHandler = function() {
-  return this.api_.getEventHandler();
+cwc.mode.sphero.ollie.Connection.prototype.getEventTarget = function() {
+  return this.api_.getEventTarget();
 };
 
 
@@ -154,3 +158,4 @@ cwc.mode.sphero.ollie.Connection.prototype.cleanUp = function() {
   this.stop();
   this.events_.clear();
 };
+});

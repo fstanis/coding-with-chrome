@@ -31,10 +31,11 @@ goog.require('cwc.fileHandler.File');
 goog.require('cwc.fileHandler.FileExporter');
 goog.require('cwc.fileHandler.FileLoader');
 goog.require('cwc.fileHandler.FileSaver');
+goog.require('cwc.lib.protocol.bluetoothChrome.Api');
+goog.require('cwc.lib.protocol.bluetoothWeb.Api');
 goog.require('cwc.mode.Modder');
 goog.require('cwc.protocol.arduino.Api');
-goog.require('cwc.protocol.bluetooth.classic.Api');
-goog.require('cwc.protocol.bluetooth.lowEnergy.Api');
+goog.require('cwc.protocol.mDNS.Api');
 goog.require('cwc.protocol.raspberryPi.Api');
 goog.require('cwc.protocol.serial.Api');
 goog.require('cwc.protocol.tcp.HTTPServer');
@@ -74,6 +75,7 @@ goog.require('cwc.utils.Logger');
 goog.require('goog.dom');
 
 
+goog.scope(function() {
 /**
  * Addons.
  * @enum {!Function}
@@ -118,12 +120,12 @@ cwc.ui.BuilderHelpers = {
 /**
  * General protocols.
  * @enum {!Function}
+ * @deprecated
  */
 cwc.ui.supportedProtocols = {
   // Low-level
-  'bluetooth': cwc.protocol.bluetooth.classic.Api,
-  'bluetoothLE': cwc.protocol.bluetooth.lowEnergy.Api,
   'serial': cwc.protocol.serial.Api,
+  'mdns': cwc.protocol.mDNS.Api,
 
   // Boards
   'arduino': cwc.protocol.arduino.Api,
@@ -168,7 +170,7 @@ cwc.ui.Builder = function() {
   /** @type {Element} */
   this.node = null;
 
-  /** @private {!boolean} */
+  /** @private {boolean} */
   this.chromeApp_ = this.helper.checkChromeFeature('app');
 
   /** @private {!cwc.utils.Events} */
@@ -192,18 +194,14 @@ cwc.ui.Builder = function() {
  * Decorates the given node and adds the code editor.
  * @param {Element|string=} node
  * @return {!Promise}
- * @async
  * @export
  */
-cwc.ui.Builder.prototype.decorate = async function(node = null) {
+cwc.ui.Builder.prototype.decorate = async function(node = 'cwc-editor') {
   if (goog.isString(node)) {
     this.node = goog.dom.getElement(node);
   } else if (goog.isObject(node)) {
     this.node = node;
-  } else if (goog.dom.getElement('cwc-editor')) {
-    this.node = goog.dom.getElement('cwc-editor');
   }
-
   if (!this.node) {
     this.raiseError('Required node is neither a string or an object!');
   }
@@ -250,6 +248,7 @@ cwc.ui.Builder.prototype.decorateUI = function() {
       return reject();
     }
 
+    // Checking requirements
     this.setProgress('Checking requirements ...', 5);
     this.checkRequirements_('blockly');
     this.checkRequirements_('codemirror');
@@ -263,6 +262,8 @@ cwc.ui.Builder.prototype.decorateUI = function() {
     this.setProgressFunc('Prepare experimental ...', this.prepareExperimental_);
     this.setProgressFunc('Prepare dialog ...', this.prepareDialog);
     this.setProgressFunc('Prepare protocols ...', this.prepareProtocols);
+    this.setProgressFunc('Prepare Bluetooth / Bluetooth LE support ...',
+      this.prepareBluetooth);
     if (this.helper.checkChromeFeature('sockets.tcpServer')) {
       this.setProgressFunc('Prepare internal Server', this.prepareServer);
     }
@@ -274,11 +275,6 @@ cwc.ui.Builder.prototype.decorateUI = function() {
         this.prepareOauth2Helper);
     }
     this.setProgressFunc('Render editor GUI ...', this.renderGui);
-    this.setProgressFunc('Prepare Bluetooth / Bluetooth LE support ...',
-      this.prepareBluetooth);
-    if (this.helper.checkChromeFeature('serial')) {
-      this.setProgressFunc('Prepare Serial support ...', this.prepareSerial);
-    }
     if (this.helper.checkChromeFeature('manifest.oauth2')) {
       this.setProgressFunc('Prepare account support ...', this.prepareAccount);
     }
@@ -293,6 +289,8 @@ cwc.ui.Builder.prototype.decorateUI = function() {
       this.events_.clear();
       this.loadingScreen_.hideSecondsAfterStart(3000);
       resolve();
+    }).catch((error) => {
+      this.log_.error('Failed to load cache', error);
     });
   });
 };
@@ -326,7 +324,7 @@ cwc.ui.Builder.prototype.isReady = function() {
 
 
 /**
- * @param {!string} filename
+ * @param {string} filename
  * @return {Promise}
  * @export
  */
@@ -336,8 +334,8 @@ cwc.ui.Builder.prototype.loadFile = function(filename) {
 
 
 /**
- * @param {!string} text
- * @param {!number} current
+ * @param {string} text
+ * @param {number} current
  * @param {number=} total
  */
 cwc.ui.Builder.prototype.setProgress = function(text, current, total = 100) {
@@ -346,7 +344,7 @@ cwc.ui.Builder.prototype.setProgress = function(text, current, total = 100) {
 
 
 /**
- * @param {!string} text
+ * @param {string} text
  * @param {!Function} func
  * @param {number=} steps
  * @return {Function|Promise}
@@ -357,7 +355,7 @@ cwc.ui.Builder.prototype.setProgressFunc = function(text, func, steps) {
 
 
 /**
- * @param {!string} error
+ * @param {string} error
  * @param {boolean=} skipThrow
  */
 cwc.ui.Builder.prototype.raiseError = function(error, skipThrow = false) {
@@ -401,25 +399,20 @@ cwc.ui.Builder.prototype.prepareAddons = function() {
  * Prepare Bluetooth / Bluetooth LE interface if needed.
  */
 cwc.ui.Builder.prototype.prepareBluetooth = function() {
-  let bluetoothInstance = this.helper.getInstance('bluetooth');
-  if (this.helper.checkChromeFeature('bluetooth') && bluetoothInstance) {
-    bluetoothInstance.prepare();
+  if (this.helper.checkChromeFeature('bluetooth')) {
+    let BluetoothChromeApi =
+      goog.module.get('cwc.lib.protocol.bluetoothChrome.Api');
+    let bluetoothChromeInstance =
+      this.helper.setInstance('bluetoothChrome', new BluetoothChromeApi());
+    bluetoothChromeInstance.prepare();
   }
 
-  let bluetoothLEInstance = this.helper.getInstance('bluetoothLE');
-  if (this.helper.checkBrowserFeature('bluetooth') && bluetoothLEInstance) {
-    bluetoothLEInstance.prepare();
-  }
-};
-
-
-/**
- * Prepare Serial interface if needed.
- */
-cwc.ui.Builder.prototype.prepareSerial = function() {
-  let serialInstance = this.helper.getInstance('serial');
-  if (serialInstance) {
-    serialInstance.prepare();
+  if (this.helper.checkBrowserFeature('bluetooth')) {
+    let BluetoothWebApi =
+      goog.module.get('cwc.lib.protocol.bluetoothWeb.Api');
+    let bluetoothWebInstance =
+      this.helper.setInstance('bluetoothWeb', new BluetoothWebApi());
+    bluetoothWebInstance.prepare();
   }
 };
 
@@ -523,7 +516,7 @@ cwc.ui.Builder.prototype.prepareOauth2Helper = function() {
 
 /**
  * @param {!cwc.utils.AddonInstance} instance
- * @param {!string} instanceName
+ * @param {string} instanceName
  * @private
  */
 cwc.ui.Builder.prototype.loadAddon_ = function(instance, instanceName) {
@@ -537,7 +530,7 @@ cwc.ui.Builder.prototype.loadAddon_ = function(instance, instanceName) {
 
 /**
  * @param {!cwc.utils.HelperInstance} instance
- * @param {!string} instanceName
+ * @param {string} instanceName
  * @private
  */
 cwc.ui.Builder.prototype.loadHelper_ = function(instance, instanceName) {
@@ -605,3 +598,4 @@ cwc.ui.Builder.prototype.checkRequirements_ = function(name) {
         'Please check if you have included the ' + name + ' files.');
   }
 };
+});

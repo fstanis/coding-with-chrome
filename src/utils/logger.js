@@ -16,6 +16,8 @@
  * limitations under the License.
  *
  * @author mbordihn@google.com (Markus Bordihn)
+ *
+ * @deprecated due to coding-with-chrome-libraries
  */
 goog.provide('cwc.utils.LogLevel');
 goog.provide('cwc.utils.Logger');
@@ -31,7 +33,7 @@ const ENABLE_LOGGING = true;
  * 1 (ALERT)     action must be taken immediately
  * 2 (CRITICAL)  critical conditions
  * 3 (ERROR)     error conditions
- * 4 (WARNING)   warning conditions
+ * 4 (WARN)      warning conditions
  * 5 (NOTICE)    normal but significant condition
  * 6 (INFO)      informational
  * 7 (DEBUG)     debug-level messages
@@ -43,7 +45,7 @@ cwc.utils.LogLevel = {
   ALERT: 1,
   CRITICAL: 2,
   ERROR: 3,
-  WARNING: 4,
+  WARN: 4,
   NOTICE: 5,
   INFO: 6,
   DEBUG: 7,
@@ -59,17 +61,17 @@ cwc.utils.LogLevel = {
  */
 cwc.utils.Logger = function(name = 'Logger',
     logLevel = cwc.utils.LogLevel.NOTICE) {
-  /** @type {!string} */
+  /** @type {string} */
   this.name = name;
 
-  /** @type {!string} */
+  /** @type {string} */
   this.displayName = this.name ? '%c' + this.name : '';
 
-  /** @type {!number} */
+  /** @type {number} */
   this.logLevel = typeof cwc.config !== 'undefined' ?
     Number(cwc.config.Logging.LEVEL) : logLevel;
 
-  /** @type {!boolean} */
+  /** @type {boolean} */
   this.enabled_ = ENABLE_LOGGING;
 
   /** @type {!Function} */
@@ -150,7 +152,7 @@ cwc.utils.Logger.prototype.setLogLevel = function(logLevel) {
 
 
 /**
- * @param {!string} name
+ * @param {string} name
  * @param {!cwc.utils.LogLevel} logLevel
  * @param {!Function} logger
  * @param {boolean=} raw

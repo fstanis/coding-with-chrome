@@ -23,13 +23,13 @@ goog.require('cwc.utils.Logger');
 
 
 /**
- * @param {!string} name
+ * @param {string} name
  * @param {number=} version
  * @param {string=} objectStoreName
  * @constructor
  */
 cwc.utils.Database = function(name, version) {
-  /** @type {!string} */
+  /** @type {string} */
   this.name = 'Database';
 
   /** @private {!Object} */
@@ -38,13 +38,13 @@ cwc.utils.Database = function(name, version) {
   /** @private {*} */
   this.database_ = null;
 
-  /** @private {!string} */
+  /** @private {string} */
   this.name_ = name;
 
   /** @private {!cwc.utils.Logger} */
   this.log_ = new cwc.utils.Logger(this.name + '::' + this.name_);
 
-  /** @private {!string} */
+  /** @private {string} */
   this.defaultObjectStore_ = '__data__';
 
   /** @private {number|undefined} */
@@ -105,14 +105,22 @@ cwc.utils.Database.prototype.open = function(config = this.config_) {
 
 /**
  * Adds a new record, if not already exists.
- * @param {!string} name
+ * @param {string} name
  * @param {!string|number} content
  * @param {string=} group
+ * @return {Promise}
  */
 cwc.utils.Database.prototype.add = function(name, content, group) {
-  this.open().then(() => {
-    this.log_.info('Add', name, group ? ' in group ' + group : '');
-    this.getObjectStore_(group)['add'](content, name);
+  return new Promise((resolve, reject) => {
+    this.open().then(() => {
+      this.log_.info('Add', name, group ? ' in group ' + group : '');
+      let request = this.getObjectStore_(group)['add'](content, name);
+      request.onsuccess = resolve;
+      request.onerror = () => {
+        this.log_.error('Failed to add', name, 'to group', group);
+        reject();
+      };
+    });
   });
 };
 
@@ -120,30 +128,47 @@ cwc.utils.Database.prototype.add = function(name, content, group) {
 /**
  * Updates given record, or inserts a new record if not already exist.
  * @param {string=} group
+ * @return {Promise}
  */
 cwc.utils.Database.prototype.clear = function(
     group = this.defaultObjectStore_) {
-  this.open().then(() => {
-    if (this.existObjectStore_(group)) {
-      this.log_.info('Clear group', group);
-      this.getObjectStore_(group)['clear']();
-    } else {
-      this.log_.warn('ObjectStore', group, 'does not exists!');
-    }
+  return new Promise((resolve, reject) => {
+    this.open().then(() => {
+      if (this.existObjectStore_(group)) {
+        this.log_.info('Clear group', group);
+        let request = this.getObjectStore_(group)['clear']();
+        request.onsuccess = resolve;
+        request.onerror = () => {
+          this.log_.warn('Failed to clear database');
+          reject();
+        };
+      } else {
+        this.log_.warn('ObjectStore', group, 'does not exists!');
+        resolve();
+      }
+    });
   });
 };
 
 
 /**
  * Updates given record, or inserts a new record if not already exist.
- * @param {!string} name
- * @param {!string} content
+ * @param {string} name
+ * @param {string} content
  * @param {string=} group
+ * @return {Promise}
  */
 cwc.utils.Database.prototype.put = function(name, content, group) {
-  this.open().then(() => {
-    this.log_.info('Put', name, group ? ' in group ' + group : '');
-    this.getObjectStore_(group)['put'](content, name);
+  return new Promise((resolve, reject) => {
+    this.open().then(() => {
+      this.log_.info('Put', name, group ? ' in group ' + group : '');
+      let request = this.getObjectStore_(group)['put'](content, name);
+      request.onsuccess = resolve;
+      request.onerror = () => {
+        this.log_.error('Failed to put', name, 'to group', group);
+        reject();
+      };
+    });
   });
 };
 
@@ -155,7 +180,7 @@ cwc.utils.Database.prototype.set = cwc.utils.Database.prototype.put;
 
 
 /**
- * @param {!string} name
+ * @param {string} name
  * @param {string=} group
  * @return {Promise}
  */
@@ -164,13 +189,15 @@ cwc.utils.Database.prototype.get = function(name, group) {
     this.log_.error('Invalid name', name, '!');
   }
   return new Promise((resolve, reject) => {
-    let result = this.getObjectStoreReadOnly_(group)['get'](name);
-    result['onsuccess'] = (e) => {
-      resolve(e.target.result);
-    };
-    result['onerror'] = (e) => {
-      reject(e);
-    };
+    this.open().then(() => {
+      let result = this.getObjectStoreReadOnly_(group)['get'](name);
+      result['onsuccess'] = (e) => {
+        resolve(e.target.result);
+      };
+      result['onerror'] = (e) => {
+        reject(e);
+      };
+    });
   });
 };
 
@@ -236,7 +263,7 @@ cwc.utils.Database.prototype.getAllWithKeys = async function(group, query,
 
 
 /**
- * @param {!string} name
+ * @param {string} name
  * @param {string=} group
  * @return {Promise}
  */
@@ -254,7 +281,7 @@ cwc.utils.Database.prototype.delete = function(name, group) {
 
 
 /**
- * @param {!string} objectStoreName
+ * @param {string} objectStoreName
  * @return {THIS}
  * @template THIS
  */

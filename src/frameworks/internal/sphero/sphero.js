@@ -40,14 +40,20 @@ cwc.framework.Sphero = function() {
   /** @private {!cwc.framework.Messenger} */
   this.messenger_ = new cwc.framework.Messenger()
     .setListenerScope(this)
-    .addListener('__EVENT__COLLISION', this.handleCollision_);
+    .addListener('__EVENT__COLLISION', this.handleCollision_)
+    .addListener('__EVENT__changed_values', function(e) {
+      console.log('Changed values event', e);
+    })
+    .addListener('__EVENT__changed_speed', function(e) {
+      console.log('Changed speed event', e);
+    });
 };
 
 
 /**
- * @param {!number} red 0-255
- * @param {!number} green 0-255
- * @param {!number} blue 0-255
+ * @param {number} red 0-255
+ * @param {number} green 0-255
+ * @param {number} blue 0-255
  * @param {boolean=} persistent
  * @param {number=} delay in msec
  * @export
@@ -63,7 +69,7 @@ cwc.framework.Sphero.prototype.setRGB = function(red, green, blue,
 
 
 /**
- * @param {!number} brightness 0-100
+ * @param {number} brightness 0-100
  * @param {number=} delay in msec
  * @export
  */
@@ -73,7 +79,7 @@ cwc.framework.Sphero.prototype.setBackLed = function(brightness, delay) {
 
 
 /**
- * @param {!number} timeout in msec
+ * @param {number} timeout in msec
  * @param {number=} delay
  * @export
  */
@@ -98,7 +104,7 @@ cwc.framework.Sphero.prototype.roll = function(speed, heading, state, delay) {
 
 
 /**
- * @param {!number} time in sec
+ * @param {number} time in sec
  * @param {number=} speed 0-255
  * @param {number=} heading 0-359
  * @param {boolean=} stop
@@ -117,7 +123,7 @@ cwc.framework.Sphero.prototype.rollTime = function(time, speed = 20, heading,
 
 
 /**
- * @param {!boolean} enable
+ * @param {boolean} enable
  * @param {number=} delay in msec
  * @export
  */
@@ -136,7 +142,7 @@ cwc.framework.Sphero.prototype.stop = function(delay) {
 
 
 /**
- * @param {!number} heading
+ * @param {number} heading
  * @export
  */
 cwc.framework.Sphero.prototype.calibrate = function(heading) {
@@ -164,7 +170,7 @@ cwc.framework.Sphero.prototype.onCollision = function(func) {
 
 
 /**
- * @param {!number} data
+ * @param {number} data
  * @private
  */
 cwc.framework.Sphero.prototype.handleCollision_ = function(data) {

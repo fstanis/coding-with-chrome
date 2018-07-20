@@ -39,7 +39,7 @@ goog.require('goog.ui.SplitPane.Orientation');
 
 /**
  * Supported layout types.
- * @enum {!number}
+ * @enum {number}
  */
 cwc.ui.LayoutType = {
   NONE: 0,
@@ -73,14 +73,14 @@ cwc.ui.Layout = function(helper) {
   /** @type {!Object.<Element>} */
   this.nodes = {};
 
-  /** @type {!number} */
+  /** @type {number} */
   this.handleSize = 2;
 
   /** @type {cwc.ui.LayoutType} */
   this.layout = cwc.ui.LayoutType.NONE;
 
   /** @type {goog.events.EventTarget} */
-  this.eventHandler = new goog.events.EventTarget();
+  this.eventTarget = new goog.events.EventTarget();
 
   /** @type {!goog.math.Size} */
   this.chromeSize = new goog.math.Size(400, 400);
@@ -152,12 +152,12 @@ cwc.ui.Layout.prototype.decorateDefault = function(splitpaneSize = 400) {
   this.events_.listen(
     this.splitpane, goog.ui.SplitPane.EventType.HANDLE_DRAG_END, () => {
       this.adjustSize();
-      this.eventHandler.dispatchEvent(goog.events.EventType.DRAGEND);
+      this.eventTarget.dispatchEvent(goog.events.EventType.DRAGEND);
     });
   this.events_.listen(
     this.splitpane, goog.ui.SplitPane.EventType.HANDLE_SNAP, () => {
       this.adjustSize();
-      this.eventHandler.dispatchEvent(goog.events.EventType.DRAGEND);
+      this.eventTarget.dispatchEvent(goog.events.EventType.DRAGEND);
     });
 };
 
@@ -173,7 +173,7 @@ cwc.ui.Layout.prototype.getNodes = function() {
 
 /**
  * Returns the named node of the current layout.
- * @param {!string} name
+ * @param {string} name
  * @return {Element}
  */
 cwc.ui.Layout.prototype.getNode = function(name) {
@@ -252,12 +252,12 @@ cwc.ui.Layout.prototype.refreshLayout = function() {
  */
 cwc.ui.Layout.prototype.adjustSize = function() {
   this.refresh_();
-  this.eventHandler.dispatchEvent(goog.events.EventType.RESIZE);
+  this.eventTarget.dispatchEvent(goog.events.EventType.RESIZE);
 };
 
 
 /**
- * @param {!number} size
+ * @param {number} size
  */
 cwc.ui.Layout.prototype.setHandleSize = function(size) {
   this.handleSize = size;
@@ -267,7 +267,7 @@ cwc.ui.Layout.prototype.setHandleSize = function(size) {
 
 
 /**
- * @param {!boolean} fullscreen
+ * @param {boolean} fullscreen
  */
 cwc.ui.Layout.prototype.setFullscreenEditor = function(fullscreen) {
   this.setFullscreen_(fullscreen, true);
@@ -275,7 +275,7 @@ cwc.ui.Layout.prototype.setFullscreenEditor = function(fullscreen) {
 
 
 /**
- * @param {!boolean} fullscreen
+ * @param {boolean} fullscreen
  */
 cwc.ui.Layout.prototype.setFullscreenPreview = function(fullscreen) {
   this.setFullscreen_(fullscreen, false);
@@ -321,8 +321,8 @@ cwc.ui.Layout.prototype.cleanUp = function() {
 /**
  * @return {goog.events.EventTarget}
  */
-cwc.ui.Layout.prototype.getEventHandler = function() {
-  return this.eventHandler;
+cwc.ui.Layout.prototype.getEventTarget = function() {
+  return this.eventTarget;
 };
 
 
@@ -358,8 +358,8 @@ cwc.ui.Layout.prototype.refresh_ = function() {
 
 /**
  * Adjusts the main UI element to fullscreen.
- * @param {!boolean} fullscreen
- * @param {!boolean} editorMode
+ * @param {boolean} fullscreen
+ * @param {boolean} editorMode
  */
 cwc.ui.Layout.prototype.setFullscreen_ = function(fullscreen,
     editorMode = false) {
@@ -424,7 +424,7 @@ cwc.ui.Layout.prototype.renderTemplate_ = function(template, type) {
  * @private
  */
 cwc.ui.Layout.prototype.resetLayout_ = function() {
-  this.eventHandler.dispatchEvent(goog.events.EventType.UNLOAD);
+  this.eventTarget.dispatchEvent(goog.events.EventType.UNLOAD);
   this.setFullscreen_(false);
   this.splitpane = null;
   this.splitpaneCachedSize = null;

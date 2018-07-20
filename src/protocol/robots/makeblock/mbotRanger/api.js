@@ -22,7 +22,7 @@
  */
 goog.provide('cwc.protocol.makeblock.mbotRanger.Api');
 
-goog.require('cwc.protocol.bluetooth.classic.Events');
+goog.require('cwc.lib.protocol.bluetoothChrome.Events');
 goog.require('cwc.protocol.makeblock.mbotRanger.Handler');
 goog.require('cwc.protocol.makeblock.mbotRanger.IndexType');
 goog.require('cwc.protocol.makeblock.mbotRanger.Monitoring');
@@ -36,6 +36,10 @@ goog.require('cwc.utils.StreamReader');
 
 goog.require('goog.events.EventTarget');
 
+
+goog.scope(function() {
+const BluetoothEvents =
+  goog.module.get('cwc.lib.protocol.bluetoothChrome.Events');
 
 /**
  * @constructor
@@ -59,7 +63,7 @@ cwc.protocol.makeblock.mbotRanger.Api = function() {
   this.monitoring = new cwc.protocol.makeblock.mbotRanger.Monitoring(this);
 
   /** @type {goog.events.EventTarget} */
-  this.eventHandler = new goog.events.EventTarget();
+  this.eventTarget = new goog.events.EventTarget();
 
   /** @private {!cwc.utils.Events} */
   this.events_ = new cwc.utils.Events(this.name);
@@ -80,7 +84,7 @@ cwc.protocol.makeblock.mbotRanger.Api = function() {
 
 /**
  * Connects the mBot Ranger.
- * @param {!cwc.protocol.bluetooth.classic.Device} device
+ * @param {!cwc.lib.protocol.bluetoothChrome.Device} device
  * @return {boolean} Was able to prepare and connect to the mBot.
  * @export
  */
@@ -101,7 +105,7 @@ cwc.protocol.makeblock.mbotRanger.Api.prototype.connect = function(device) {
 
 
 /**
- * @return {!boolean}
+ * @return {boolean}
  * @export
  */
 cwc.protocol.makeblock.mbotRanger.Api.prototype.isConnected = function() {
@@ -113,8 +117,8 @@ cwc.protocol.makeblock.mbotRanger.Api.prototype.isConnected = function() {
  * @export
  */
 cwc.protocol.makeblock.mbotRanger.Api.prototype.prepare = function() {
-  this.events_.listen(this.device.getEventHandler(),
-    cwc.protocol.bluetooth.classic.Events.Type.ON_RECEIVE,
+  this.events_.listen(this.device.getEventTarget(),
+    BluetoothEvents.Type.ON_RECEIVE,
     this.handleOnReceive_.bind(this));
   this.exec('playTone', {'frequency': 524, 'duration': 240});
   this.exec('playTone', {'frequency': 584, 'duration': 240});
@@ -149,7 +153,7 @@ cwc.protocol.makeblock.mbotRanger.Api.prototype.reset = function() {
 
 /**
  * Executer for the default handler commands.
- * @param {!string} command
+ * @param {string} command
  * @param {Object=} data
  * @export
  */
@@ -171,7 +175,7 @@ cwc.protocol.makeblock.mbotRanger.Api.prototype.send = function(buffer) {
 
 
 /**
- * @param {!string} command
+ * @param {string} command
  * @param {Object=} data
  * @return {!ArrayBuffer}
  * @export
@@ -186,8 +190,8 @@ cwc.protocol.makeblock.mbotRanger.Api.prototype.getBuffer = function(
  * @return {goog.events.EventTarget}
  * @export
  */
-cwc.protocol.makeblock.mbotRanger.Api.prototype.getEventHandler = function() {
-  return this.eventHandler;
+cwc.protocol.makeblock.mbotRanger.Api.prototype.getEventTarget = function() {
+  return this.eventTarget;
 };
 
 
@@ -216,7 +220,7 @@ cwc.protocol.makeblock.mbotRanger.Api.prototype.reset = function() {
 
 
 /**
- * @param {!boolean} enable
+ * @param {boolean} enable
  * @export
  */
 cwc.protocol.makeblock.mbotRanger.Api.prototype.monitor = function(enable) {
@@ -393,5 +397,6 @@ cwc.protocol.makeblock.mbotRanger.Api.prototype.handleSensorData_ = function(
  */
 cwc.protocol.makeblock.mbotRanger.Api.prototype.dispatchSensorEvent_ = function(
     index, event, data) {
-  this.eventHandler.dispatchEvent(event(data));
+  this.eventTarget.dispatchEvent(event(data));
 };
+});

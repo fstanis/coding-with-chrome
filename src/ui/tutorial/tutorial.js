@@ -48,7 +48,7 @@ goog.require('soydata.VERY_UNSAFE');
  * @final
  */
 cwc.ui.Tutorial = function(helper) {
-  /** @type {!string} */
+  /** @type {string} */
   this.name = 'Tutorial';
 
   /** @type {!cwc.utils.Helper} */
@@ -96,7 +96,7 @@ cwc.ui.Tutorial = function(helper) {
   /** @private {!cwc.utils.Events} */
   this.events_ = new cwc.utils.Events(this.name, '', this);
 
-  /** @private {!boolean} */
+  /** @private {boolean} */
   this.webviewSupport_ = this.helper.checkChromeFeature('webview');
 
   /** @private {!boolean} */

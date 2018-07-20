@@ -39,7 +39,7 @@ cwc.protocol.arduino.Api = function() {
   /** @type {cwc.protocol.serial.Device} */
   this.device = null;
 
-  /** @type {!boolean} */
+  /** @type {boolean} */
   this.connected = false;
 
   /** @type {Function} */
@@ -86,7 +86,7 @@ cwc.protocol.arduino.Api.prototype.disconnect = function() {
 
 
 /**
- * @return {!boolean}
+ * @return {boolean}
  */
 cwc.protocol.arduino.Api.prototype.isConnected = function() {
   return this.connected;
@@ -123,7 +123,7 @@ cwc.protocol.arduino.Api.prototype.handleOnReceive = function(
  * @return {goog.events.EventTarget}
  * @export
  */
-cwc.protocol.arduino.Api.prototype.getEventHandler = function() {
+cwc.protocol.arduino.Api.prototype.getEventTarget = function() {
   return this.eventHandler;
 };
 

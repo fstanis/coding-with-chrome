@@ -80,7 +80,7 @@ cwc.ui.Gui = function(helper) {
   /** @type {!cwc.utils.Logger} */
   this.log_ = new cwc.utils.Logger(this.name);
 
-  /** @private {!boolean} */
+  /** @private {boolean} */
   this.isChromeApp_ = this.helper.checkChromeFeature('app');
 };
 
@@ -297,7 +297,7 @@ cwc.ui.Gui.prototype.getSidebarSize = function() {
 
 cwc.ui.Gui.prototype.close = function() {
   this.log_.info('Close Coding with Chrome editor ...');
-  let bluetoothInstance = this.helper.getInstance('bluetooth');
+  let bluetoothInstance = this.helper.getInstance('bluetoothChrome');
   if (bluetoothInstance) {
     let featuresInstance = this.helper.getInstance('features');
     if (featuresInstance) {

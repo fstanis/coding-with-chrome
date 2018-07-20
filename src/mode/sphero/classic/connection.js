@@ -43,14 +43,14 @@ cwc.mode.sphero.classic.Connection = function(helper) {
   /** @type {goog.Timer} */
   this.connectMonitor = null;
 
-  /** @type {!number} */
+  /** @type {number} */
   this.connectMonitorInterval = 5000;
 
   /** @private {!cwc.protocol.sphero.classic.Api} */
   this.api_ = new cwc.protocol.sphero.classic.Api();
 
   /** @private {!goog.events.EventTarget} */
-  this.apiEvents_ = this.api_.getEventHandler();
+  this.apiEvents_ = this.api_.getEventTarget();
 
   /** @private {!cwc.utils.Events} */
   this.events_ = new cwc.utils.Events(this.name);
@@ -77,13 +77,13 @@ cwc.mode.sphero.classic.Connection.prototype.init = function() {
 
   let layoutInstance = this.helper.getInstance('layout');
   if (layoutInstance) {
-    this.events_.listen(layoutInstance.getEventHandler(),
+    this.events_.listen(layoutInstance.getEventTarget(),
         goog.events.EventType.UNLOAD, this.cleanUp, false, this);
   }
 
   let previewInstance = this.helper.getInstance('preview');
   if (previewInstance) {
-    this.events_.listen(previewInstance.getEventHandler(),
+    this.events_.listen(previewInstance.getEventTarget(),
       cwc.ui.PreviewEvents.Type.STATUS_CHANGE, this.handlePreviewStatus_,
       false, this);
   }
@@ -104,8 +104,11 @@ cwc.mode.sphero.classic.Connection.prototype.init = function() {
  * @export
  */
 cwc.mode.sphero.classic.Connection.prototype.connect = function(opt_event) {
+  let bluetoothInstance = this.helper.getInstance('bluetoothChrome');
+  if (!bluetoothInstance) {
+    return;
+  }
   if (!this.isConnected()) {
-    let bluetoothInstance = this.helper.getInstance('bluetooth', true);
     bluetoothInstance.autoConnectDevice(this.autoConnectName,
       this.api_.connect.bind(this.api_));
   }
@@ -126,7 +129,7 @@ cwc.mode.sphero.classic.Connection.prototype.stop = function() {
 
 
 /**
- * @return {!boolean}
+ * @return {boolean}
  * @export
  */
 cwc.mode.sphero.classic.Connection.prototype.isConnected = function() {
@@ -137,8 +140,8 @@ cwc.mode.sphero.classic.Connection.prototype.isConnected = function() {
 /**
  * @return {goog.events.EventTarget}
  */
-cwc.mode.sphero.classic.Connection.prototype.getEventHandler = function() {
-  return this.api_.getEventHandler();
+cwc.mode.sphero.classic.Connection.prototype.getEventTarget = function() {
+  return this.apiEvents_;
 };
 
 

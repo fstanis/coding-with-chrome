@@ -16,6 +16,8 @@
  * limitations under the License.
  *
  * @author mbordihn@google.com (Markus Bordihn)
+ *
+ * @deprecated due to coding-with-chrome-libraries
  */
 goog.provide('cwc.utils.StreamReader');
 
@@ -80,7 +82,7 @@ cwc.utils.StreamReader.prototype.setHeaders = function(headers) {
 
 
 /**
- * @param {!number} size
+ * @param {number} size
  * @return {THIS}
  * @template THIS
  * @export

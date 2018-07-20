@@ -37,7 +37,7 @@ cwc.mode.makeblock.mbotRanger.Control = function(helper, connection) {
   /** @type {string} */
   this.name = 'mBot Ranger Control';
 
-  /** @type {!string} */
+  /** @type {string} */
   this.prefix = helper.getPrefix('mbot-ranger-control');
 
   /** @type {Element} */
@@ -58,10 +58,10 @@ cwc.mode.makeblock.mbotRanger.Control = function(helper, connection) {
   /** @private {cwc.ui.Message} */
   this.messageInstance_ = null;
 
-  /** @private {!number} */
+  /** @private {number} */
   this.normalSpeed_ = 85;
 
-  /** @private {!number} */
+  /** @private {number} */
   this.boostedSpeed_ = 130;
 };
 
@@ -138,26 +138,26 @@ cwc.mode.makeblock.mbotRanger.Control.prototype.addEventHandler_ = function() {
  */
 cwc.mode.makeblock.mbotRanger.Control.prototype.addGamepadHandler_ = function(
     ) {
-  let eventHandler = this.helper.getInstance('gamepad').getEventHandler();
+  let eventTarget = this.helper.getInstance('gamepad').getEventTarget();
   let rotation = false;
-  this.events_.listen(eventHandler, cwc.utils.Gamepad.Events.Type.BUTTON[7],
+  this.events_.listen(eventTarget, cwc.utils.Gamepad.Events.Type.BUTTON[7],
     (event) => {
       if (!rotation) {
         this.api.exec('movePower', {'power': event.data * 255});
       }
   });
-  this.events_.listen(eventHandler, cwc.utils.Gamepad.Events.Type.BUTTON[6],
+  this.events_.listen(eventTarget, cwc.utils.Gamepad.Events.Type.BUTTON[6],
     (event) => {
       if (!rotation) {
         this.api.exec('movePower', {'power': -event.data * 255});
       }
   });
-  this.events_.listen(eventHandler, cwc.utils.Gamepad.Events.Type.AXIS[0],
+  this.events_.listen(eventTarget, cwc.utils.Gamepad.Events.Type.AXIS[0],
     (event) => {
       rotation = event.data ? true : false;
       this.api.exec('rotatePower', {'power': event.data * 255});
   });
-  this.events_.listen(eventHandler, cwc.utils.Gamepad.Events.Type.BUTTON[0],
+  this.events_.listen(eventTarget, cwc.utils.Gamepad.Events.Type.BUTTON[0],
     (event) => {
       if (event.data) {
         this.api.exec('playTone', {'frequency': 588, 'duration': 240});

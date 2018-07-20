@@ -25,6 +25,7 @@ goog.require('cwc.mode.Type');
 goog.require('cwc.mode.basic.Mod');
 goog.require('cwc.mode.coffeescript.Mod');
 goog.require('cwc.mode.lego.ev3.Mod');
+goog.require('cwc.mode.lego.weDo2.Mod');
 goog.require('cwc.mode.html5.Mod');
 goog.require('cwc.mode.javascript.Mod');
 goog.require('cwc.mode.json.Mod');
@@ -34,11 +35,10 @@ goog.require('cwc.mode.pencilCode.Mod');
 goog.require('cwc.mode.phaser.Mod');
 goog.require('cwc.mode.python.Mod');
 // goog.require('cwc.mode.raspberryPi.advanced.Mod');
-goog.require('cwc.mode.sphero.classic.Mod');
 goog.require('cwc.mode.sphero.bb8.blockly.Mod');
+goog.require('cwc.mode.sphero.classic.Mod');
 goog.require('cwc.mode.sphero.ollie.blockly.Mod');
-goog.require('cwc.mode.sphero.sprkPlus.advanced.Mod');
-goog.require('cwc.mode.sphero.sprkPlus.blockly.Mod');
+goog.require('cwc.mode.sphero.sprkPlus.Mod');
 goog.require('cwc.mode.text.Mod');
 
 
@@ -52,22 +52,22 @@ cwc.mode.Mod = function(config_data) {
   /** @type {!Array} */
   this.authors = config_data.authors || [];
 
-  /** @type {!boolean} */
+  /** @type {boolean} */
   this.autoPreview = config_data.auto_preview || false;
 
-  /** @type {!boolean} */
+  /** @type {boolean} */
   this.showBlockly = config_data.show_blockly || false;
 
-  /** @type {!boolean} */
+  /** @type {boolean} */
   this.runPreview = config_data.run_preview || false;
 
-  /** @type {!string} */
+  /** @type {string} */
   this.name = config_data.name || '';
 
-  /** @type {!string} */
+  /** @type {string} */
   this.template = config_data.template || '';
 
-  /** @type {!string} */
+  /** @type {string} */
   this.icon = config_data.icon || '';
 
   /** @type {!Object} */
@@ -203,6 +203,20 @@ cwc.mode.ConfigData[cwc.mode.Type.JSON] = new cwc.mode.Mod({
   mod: cwc.mode.json.Mod,
   name: 'JSON',
   template: 'json/blank.json',
+});
+
+
+/**
+ * Lego WeDo 2.0 blockly mode.
+ */
+cwc.mode.ConfigData[cwc.mode.Type.LEGO_WEDO2_BLOCKLY] = new cwc.mode.Mod({
+  authors: ['Markus Bordihn'],
+  icon: 'adb',
+  mime_types: [cwc.utils.mime.Type.CWC.type],
+  mod: cwc.mode.lego.weDo2.Mod,
+  show_blockly: true,
+  name: 'Lego WeDo 2.0 blockly',
+  template: 'lego/wedo2/blank-blocks.cwc',
 });
 
 
@@ -380,7 +394,7 @@ cwc.mode.ConfigData[cwc.mode.Type.SPHERO_SPRK_PLUS] = new cwc.mode.Mod({
   authors: ['Markus Bordihn'],
   icon: 'adjust',
   mime_types: [cwc.utils.mime.Type.CWC.type],
-  mod: cwc.mode.sphero.sprkPlus.advanced.Mod,
+  mod: cwc.mode.sphero.sprkPlus.Mod,
   name: 'Sphero SPRK+',
   template: 'sphero/sprk_plus/blank.cwc',
 });
@@ -393,7 +407,8 @@ cwc.mode.ConfigData[cwc.mode.Type.SPHERO_SPRK_PLUS_BLOCKLY] = new cwc.mode.Mod({
   authors: ['Markus Bordihn'],
   icon: 'adjust',
   mime_types: [cwc.utils.mime.Type.CWC.type],
-  mod: cwc.mode.sphero.sprkPlus.blockly.Mod,
+  mod: cwc.mode.sphero.sprkPlus.Mod,
+  show_blockly: true,
   name: 'Sphero SPRK+ blockly',
   template: 'sphero/sprk_plus/blank-blocks.cwc',
 });

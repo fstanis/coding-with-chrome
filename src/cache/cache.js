@@ -33,6 +33,7 @@ goog.require('cwc.utils.mime.getTypeByExtension');
  * @constructor
  * @struct
  * @final
+ * @export
  */
 cwc.Cache = function(helper) {
   /** @type {string} */
@@ -41,8 +42,8 @@ cwc.Cache = function(helper) {
   /** @type {!cwc.utils.Helper} */
   this.helper = helper;
 
-  /** @private {!number} */
-  this.version = 7;
+  /** @private {number} */
+  this.version = 8;
 
   /** @private {Object} */
   this.cache_ = {};
@@ -61,7 +62,7 @@ cwc.Cache = function(helper) {
 
 
 /**
- * @async
+ * @export
  */
 cwc.Cache.prototype.prepare = async function() {
   await this.database_.open(this.databaseConfig_);
@@ -73,25 +74,25 @@ cwc.Cache.prototype.prepare = async function() {
 /**
  * @param {!string|number} version
  */
-cwc.Cache.prototype.update = function(version) {
+cwc.Cache.prototype.update = async function(version) {
   if (version && this.version <= version) {
     this.log_.info('No updates needed', version, '>=', this.version);
     return;
   }
 
   this.log_.info('Updating Cache to version', this.version);
-  this.database_.clear();
+  await this.database_.clear();
 
   this.log_.info('Loading external frameworks ...');
-  this.loadFiles(cwc.framework.External);
+  await this.loadFiles(cwc.framework.External);
 
   this.log_.info('Loading internal frameworks ...');
-  this.loadFiles(cwc.framework.Internal);
+  await this.loadFiles(cwc.framework.Internal);
 
   this.log_.info('Loading Style Sheets ...');
-  this.loadFiles(cwc.framework.StyleSheet);
+  await this.loadFiles(cwc.framework.StyleSheet);
 
-  this.database_.add('__version__', this.version);
+  await this.database_.add('__version__', this.version);
 };
 
 
@@ -99,34 +100,37 @@ cwc.Cache.prototype.update = function(version) {
  * Loads files into cache.
  * @param {!Object} files
  */
-cwc.Cache.prototype.loadFiles = function(files) {
+cwc.Cache.prototype.loadFiles = async function(files) {
+  let promises = [];
   for (let file of Object.keys(files)) {
     if (goog.isString(files[file])) {
-      cwc.utils.Resources.getUriAsText('..' + files[file]).then((content) => {
-        this.addFile(files[file], content);
-      });
+        promises.push(cwc.utils.Resources.getUriAsText('..' + files[file])
+          .then((content) => {
+            return this.addFile(files[file], content);
+          }));
     } else {
       for (let subFile of Object.keys(files[file])) {
-        cwc.utils.Resources.getUriAsText('..' + files[file][subFile]).then(
-          (content) => {
-            this.addFile(files[file][subFile], content);
-        });
+        promises.push(cwc.utils.Resources.getUriAsText('..' +
+          files[file][subFile]).then((content) => {
+            return this.addFile(files[file][subFile], content);
+          }));
       }
     }
   }
+  await Promise.all(promises);
 };
 
 
 /**
  * @param {string!} name
- * @param {string!} content
+ * @param {string=} content
+ * @return {Promise}
  */
-cwc.Cache.prototype.addFile = function(name, content) {
+cwc.Cache.prototype.addFile = function(name, content = '') {
   if (!content) {
-    this.log_.error('Received empty content for', name);
-    return;
+    this.log_.warn('Received empty content for', name);
   }
-  this.database_.add(name, content);
+  return this.database_.add(name, content);
 };
 
 
@@ -140,8 +144,8 @@ cwc.Cache.prototype.getFile = function(name) {
 
 
 /**
- * @param {!string} name
- * @return {!string}
+ * @param {string} name
+ * @return {string}
  */
 cwc.Cache.prototype.getPreloadedFile = function(name) {
   if (this.cache_[name] === undefined) {
@@ -152,7 +156,7 @@ cwc.Cache.prototype.getPreloadedFile = function(name) {
 
 
 /**
- * @param {!string} name
+ * @param {string} name
  * @return {Promise}
  */
 cwc.Cache.prototype.preloadFile = function(name) {
@@ -172,6 +176,7 @@ cwc.Cache.prototype.preloadFile = function(name) {
 /**
  * @param {!Array} files
  * @return {!Promise}
+ * @export
  */
 cwc.Cache.prototype.preloadFiles = function(files) {
   let promises = files.map(this.preloadFile.bind(this));
@@ -180,8 +185,8 @@ cwc.Cache.prototype.preloadFiles = function(files) {
 
 
 /**
- * @param {!string} name
- * @param {!string} content
+ * @param {string} name
+ * @param {string} content
  */
 cwc.Cache.prototype.addContentToCache = function(name, content) {
   if (!content) {
@@ -241,8 +246,8 @@ cwc.Cache.prototype.clearLibraryFiles = function() {
 
 
 /**
- * @param {!string} content
- * @return {!string}
+ * @param {string} content
+ * @return {string}
  */
 cwc.Cache.optimizeContent = function(content) {
   if (content && content instanceof String) {

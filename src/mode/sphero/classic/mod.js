@@ -1,5 +1,5 @@
 /**
- * @fileoverview Sphero modifications.
+ * @fileoverview Sphero 2.0 modifications.
  *
  * @license Copyright 2018 The Coding with Chrome Authors.
  *
@@ -20,12 +20,12 @@
 goog.provide('cwc.mode.sphero.classic.Mod');
 
 goog.require('cwc.mode.default.Mod');
-goog.require('cwc.mode.sphero.Calibration');
-goog.require('cwc.mode.sphero.Control');
 goog.require('cwc.mode.sphero.Hints');
-goog.require('cwc.mode.sphero.Simulation');
+goog.require('cwc.mode.sphero.classic.Calibration');
 goog.require('cwc.mode.sphero.classic.Connection');
+goog.require('cwc.mode.sphero.classic.Control');
 goog.require('cwc.mode.sphero.classic.SensorEvents');
+goog.require('cwc.mode.sphero.classic.Simulation');
 goog.require('cwc.renderer.external.Sphero');
 goog.require('cwc.soy.sphero.Blocks');
 
@@ -36,7 +36,7 @@ goog.require('cwc.soy.sphero.Blocks');
  * @param {boolean=} enableBlockly
  */
 cwc.mode.sphero.classic.Mod = function(helper, enableBlockly = false) {
-  /** @type {!boolean} */
+  /** @type {boolean} */
   this.enableBlockly = enableBlockly;
 
   /** @type {!cwc.mode.sphero.classic.Connection} */
@@ -49,13 +49,14 @@ cwc.mode.sphero.classic.Mod = function(helper, enableBlockly = false) {
   this.mod = new cwc.mode.default.Mod(helper);
 
   /** @type {!cwc.mode.sphero.Calibration} */
-  this.calibration = new cwc.mode.sphero.Calibration(helper, this.connection);
+  this.calibration = new cwc.mode.sphero.classic.Calibration(
+    helper, this.connection);
 
-  /** @type {!cwc.mode.sphero.Control} */
-  this.control = new cwc.mode.sphero.Control(helper, this.connection);
+  /** @type {!cwc.mode.sphero.classic.Control} */
+  this.control = new cwc.mode.sphero.classic.Control(helper, this.connection);
 
-  /** @type {!cwc.mode.sphero.Simulation} */
-  this.simulation = new cwc.mode.sphero.Simulation(helper);
+  /** @type {!cwc.mode.sphero.classic.Simulation} */
+  this.simulation = new cwc.mode.sphero.classic.Simulation(helper);
 
   /** @type {!cwc.renderer.external.Sphero} */
   this.renderer = new cwc.renderer.external.Sphero(helper);

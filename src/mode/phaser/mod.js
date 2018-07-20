@@ -30,7 +30,7 @@ goog.require('cwc.soy.phaser.Blocks');
  * @param {boolean=} enableBlockly
  */
 cwc.mode.phaser.Mod = function(helper, enableBlockly = false) {
-  /** @type {!boolean} */
+  /** @type {boolean} */
   this.enableBlockly = enableBlockly;
 
   /** @type {!cwc.mode.default.Mod} */
@@ -43,7 +43,6 @@ cwc.mode.phaser.Mod = function(helper, enableBlockly = false) {
 
 /**
  * Decorates the different parts of the modification.
- * @async
  */
 cwc.mode.phaser.Mod.prototype.decorate = async function() {
   if (this.enableBlockly) {

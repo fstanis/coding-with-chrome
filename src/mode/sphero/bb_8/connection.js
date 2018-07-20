@@ -19,12 +19,16 @@
  */
 goog.provide('cwc.mode.sphero.bb8.Connection');
 
-goog.require('cwc.protocol.bluetooth.lowEnergy.supportedDevices');
+goog.require('cwc.lib.protocol.bluetoothWeb.profile.Device');
 goog.require('cwc.protocol.sphero.v1.Api');
 goog.require('cwc.utils.Events');
 
 goog.require('goog.Timer');
 
+
+goog.scope(function() {
+const BluetoothProfile =
+  goog.module.get('cwc.lib.protocol.bluetoothWeb.profile.Device');
 
 /**
  * @constructor
@@ -40,21 +44,20 @@ cwc.mode.sphero.bb8.Connection = function(helper) {
   /** @type {goog.Timer} */
   this.connectMonitor = null;
 
-  /** @type {!number} */
+  /** @type {number} */
   this.connectMonitorInterval = 5000;
 
   /** @private {!cwc.protocol.sphero.v1.Api} */
   this.api_ = new cwc.protocol.sphero.v1.Api();
 
   /** @private {!goog.events.EventTarget} */
-  this.apiEvents_ = this.api_.getEventHandler();
+  this.apiEvents_ = this.api_.getEventTarget();
 
   /** @private {!cwc.utils.Events} */
   this.events_ = new cwc.utils.Events(this.name);
 
-  /** @private {!cwc.protocol.bluetooth.lowEnergy.supportedDevices} */
-  this.device_ =
-    cwc.protocol.bluetooth.lowEnergy.supportedDevices.SPHERO_BB8;
+  /** @private {!cwc.lib.protocol.bluetoothWeb.profile.Device.Device} */
+  this.device_ = BluetoothProfile.SPHERO_BB8;
 };
 
 
@@ -93,8 +96,8 @@ cwc.mode.sphero.bb8.Connection.prototype.init = function() {
  */
 cwc.mode.sphero.bb8.Connection.prototype.connect = function(opt_event) {
   if (!this.isConnected()) {
-    let bluetoothInstance = this.helper.getInstance('bluetoothLE', true);
-    let devices = bluetoothInstance.getDevicesByName(this.device_);
+    let bluetoothInstance = this.helper.getInstance('bluetoothWeb', true);
+    let devices = bluetoothInstance.getDevicesByName(this.device_.name);
     if (devices) {
       devices[0].connect().then((device) => {
         this.api_.connect(device);
@@ -126,7 +129,7 @@ cwc.mode.sphero.bb8.Connection.prototype.reset = function(opt_event) {
 
 
 /**
- * @return {!boolean}
+ * @return {boolean}
  * @export
  */
 cwc.mode.sphero.bb8.Connection.prototype.isConnected = function() {
@@ -137,7 +140,7 @@ cwc.mode.sphero.bb8.Connection.prototype.isConnected = function() {
 /**
  * @return {goog.events.EventTarget}
  */
-cwc.mode.sphero.bb8.Connection.prototype.getEventHandler = function() {
+cwc.mode.sphero.bb8.Connection.prototype.getEventTarget = function() {
   return this.apiEvents_;
 };
 
@@ -175,3 +178,4 @@ cwc.mode.sphero.bb8.Connection.prototype.cleanUp = function() {
   this.stop();
   this.events_.clear();
 };
+});

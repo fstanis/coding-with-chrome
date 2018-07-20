@@ -33,19 +33,19 @@ goog.require('goog.net.NetworkStatusMonitor');
  * @export
  */
 cwc.utils.Features = function() {
-  /** @type {!string} */
+  /** @type {string} */
   this.name = 'Features';
 
-  /** @type {!string} */
+  /** @type {string} */
   this.defaultGroup = 'general';
 
-  /** @type {!string} */
+  /** @type {string} */
   this.browserGroup = 'browser';
 
-  /** @type {!string} */
+  /** @type {string} */
   this.chromeGroup = 'chrome';
 
-  /** @type {!string} */
+  /** @type {string} */
   this.javaScriptGroup = 'javascript';
 
   /** @private {Object} */
@@ -74,7 +74,6 @@ cwc.utils.Features.prototype.detectFeatures = function() {
   this.detectOnlineStatus();
   this.detectJavaScripts();
   this.monitorOnlineStatus();
-  this.log();
 };
 
 
@@ -97,6 +96,7 @@ cwc.utils.Features.prototype.detectBrowserFeatures = function() {
 
   // Communication features
   this.setBrowserFeature('bluetooth', typeof navigator.bluetooth);
+  this.setBrowserFeature('usb', typeof navigator.usb);
 
   // IndexedDB
   this.setBrowserFeature('indexedDB', typeof window.indexedDB);
@@ -138,6 +138,7 @@ cwc.utils.Features.prototype.detectChromeFeatures = function() {
   this.setChromeFeature('bluetoothLowEnergy', typeof chrome.bluetoothLowEnergy);
   this.setChromeFeature('browser', typeof chrome.browser);
   this.setChromeFeature('serial', typeof chrome.serial);
+  this.setChromeFeature('mdns', typeof chrome.mdns);
   this.setChromeFeature('webview', 'src' in document.createElement('webview'));
 
   // System features.
@@ -281,7 +282,7 @@ cwc.utils.Features.prototype.set = function(name, value,
 
 /**
  * @param {string} name
- * @return {!boolean}
+ * @return {boolean}
  * @export
  */
 cwc.utils.Features.prototype.getBrowserFeature = function(name) {
@@ -291,7 +292,7 @@ cwc.utils.Features.prototype.getBrowserFeature = function(name) {
 
 /**
  * @param {string} name
- * @return {!boolean}
+ * @return {boolean}
  * @export
  */
 cwc.utils.Features.prototype.getChromeFeature = function(name) {
@@ -301,7 +302,7 @@ cwc.utils.Features.prototype.getChromeFeature = function(name) {
 
 /**
  * @param {string} name
- * @return {!boolean}
+ * @return {boolean}
  * @export
  */
 cwc.utils.Features.prototype.getJavaScriptFeature = function(name) {

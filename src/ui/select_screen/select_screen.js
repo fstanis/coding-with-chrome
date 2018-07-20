@@ -55,7 +55,7 @@ cwc.ui.SelectScreen = function(helper) {
   this.modules = {};
 
   /** @private {!goog.events.EventTarget} */
-  this.eventHandler_ = new goog.events.EventTarget();
+  this.eventTarget_ = new goog.events.EventTarget();
 
   /** @type {!cwc.ui.SelectScreenWelcome} */
   this.selectScreenWelcome = new cwc.ui.SelectScreenWelcome(this);
@@ -72,13 +72,13 @@ cwc.ui.SelectScreen = function(helper) {
   /** @type {boolean} */
   this.prepared_ = false;
 
-  /** @private {!string} */
+  /** @private {string} */
   this.resourcesPath_ = '../resources/examples/';
 
-  /** @private {!string} */
+  /** @private {string} */
   this.tourPath_ = '../resources/tour/';
 
-  /** @private {!string} */
+  /** @private {string} */
   this.tutorialPath_ = '../resources/tutorials/';
 
   /** @private {!cwc.utils.Events} */
@@ -149,6 +149,14 @@ cwc.ui.SelectScreen.prototype.showSelectScreen = function(forceOverview) {
     settingScreenInstance.hide();
   }
 
+  let navigationInstance = this.helper.getInstance('navigation');
+  if (navigationInstance) {
+    navigationInstance.enableOverview(false);
+    navigationInstance.enableNewFile(false);
+    navigationInstance.enableSaveFile(false);
+    navigationInstance.setHeader('Coding with Chrome', 'turned_in');
+  }
+
   let guiInstance = this.helper.getInstance('gui', true);
   guiInstance.setTitle('');
   guiInstance.setStatus('');
@@ -173,16 +181,11 @@ cwc.ui.SelectScreen.prototype.showSelectScreen = function(forceOverview) {
   } else if (this.lockAdvancedMode && !forceOverview) {
     this.showOverview(true);
   } else if (!skipWelcomeScreen) {
-    this.setNavHeader_('Coding with Chrome');
     this.showWelcome();
   } else {
     this.showOverview(advancedMode);
   }
 
-  let navigationInstance = this.helper.getInstance('navigation');
-  if (navigationInstance) {
-    navigationInstance.enableSaveFile(false);
-  }
   this.prepared_ = true;
 };
 
@@ -219,6 +222,10 @@ cwc.ui.SelectScreen.prototype.showOverview = function(advanced = false) {
   } else {
     this.showTemplate_(cwc.soy.SelectScreenNormal.template);
   }
+
+  this.events_.listen('tab-home', goog.events.EventType.CLICK, () => {
+    this.showSelectScreen(true);
+  });
 };
 
 
@@ -233,23 +240,8 @@ cwc.ui.SelectScreen.prototype.showIntro = function() {
 /**
  * @return {!goog.events.EventTarget}
  */
-cwc.ui.SelectScreen.prototype.getEventHandler = function() {
-  return this.eventHandler_;
-};
-
-
-/**
- * @param {!string} title
- * @param {string=} opt_icon
- * @param {string=} opt_color_class
- * @private
- */
-cwc.ui.SelectScreen.prototype.setNavHeader_ = function(title,
-    opt_icon, opt_color_class) {
-  let navigationInstance = this.helper.getInstance('navigation');
-  if (navigationInstance) {
-    navigationInstance.setHeader(title, opt_icon, opt_color_class);
-  }
+cwc.ui.SelectScreen.prototype.getEventTarget = function() {
+  return this.eventTarget_;
 };
 
 
@@ -283,7 +275,7 @@ cwc.ui.SelectScreen.prototype.showTemplate_ = function(template) {
     cwc.ui.Helper.mdlRefresh();
 
     // Event Handling
-    this.eventHandler_.dispatchEvent(
+    this.eventTarget_.dispatchEvent(
       cwc.ui.SelectScreen.Events.changeView(this.nodeContent));
   } else {
     console.error('Unable to render template', template);
@@ -292,7 +284,7 @@ cwc.ui.SelectScreen.prototype.showTemplate_ = function(template) {
 
 
 /**
- * @param {!string} title
+ * @param {string} title
  * @param {!Object} template
  * @param {string=} text
  */

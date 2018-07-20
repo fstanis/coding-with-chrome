@@ -21,8 +21,11 @@
  */
 goog.provide('cwc.framework.Messenger');
 
-goog.require('cwc.utils.StackQueue');
+goog.require('cwc.lib.utils.Stack');
 
+
+goog.scope(function() {
+const StackQueue = goog.module.get('cwc.lib.utils.Stack').Queue;
 
 /**
  * @param {boolean=} liteMode
@@ -54,7 +57,7 @@ cwc.framework.Messenger = function(liteMode = false) {
   this.listenerScope_ = this;
 
   /** @private {!cwc.utils.StackQueue} */
-  this.senderStack_ = new cwc.utils.StackQueue();
+  this.senderStack_ = new StackQueue(false);
 
   // Message handler
   window.addEventListener('message', this.handleMessage_.bind(this), false);
@@ -69,14 +72,12 @@ cwc.framework.Messenger = function(liteMode = false) {
     this.addListener('__gamepad__', this.handleGamepad_);
     this.addListener('__start__', this.handleStart_);
   }
-
-  this.senderStack_.addDelay(50);
 };
 
 
 /**
  * Adds the named listener.
- * @param {!string} name
+ * @param {string} name
  * @param {!Function} func
  * @param {?=} scope
  * @return {THIS}
@@ -104,7 +105,7 @@ cwc.framework.Messenger.prototype.addListener = function(name, func,
 
 
 /**
- * @param {!string} appOrigin
+ * @param {string} appOrigin
  * @export
  */
 cwc.framework.Messenger.prototype.setAppOrigin = function(appOrigin) {
@@ -144,7 +145,7 @@ cwc.framework.Messenger.prototype.setListenerScope = function(scope) {
 
 /**
  * Sends the defined data to the target window.
- * @param {!string} name
+ * @param {string} name
  * @param {Object|string=} value
  * @param {number=} delay in msec
  * @export
@@ -156,19 +157,19 @@ cwc.framework.Messenger.prototype.send = function(name, value = {}, delay = 0) {
   let sendCommand = function() {
     this.postMessage(name, value);
   }.bind(this);
-  if (!this.ready_ && !delay && name !== '__handshake__') {
-    this.senderStack_.addCommand(sendCommand);
-  } else if (delay) {
+  if (delay) {
     this.senderStack_.addCommand(sendCommand);
     this.senderStack_.addDelay(delay);
-  } else {
+  } else if (this.ready_ || name === '__handshake__') {
     sendCommand();
+  } else {
+    this.senderStack_.addCommand(sendCommand);
   }
 };
 
 
 /**
- * @param {!string} name
+ * @param {string} name
  * @param {Object|string=} value
  */
 cwc.framework.Messenger.prototype.postMessage = function(name, value) {
@@ -184,22 +185,45 @@ cwc.framework.Messenger.prototype.postMessage = function(name, value) {
 
 
 /**
- * @param {!string} code
+ * @param {string} code
  * @private
  */
 cwc.framework.Messenger.prototype.executeCode_ = function(code) {
-  if (!code || typeof code !== 'string') {
-    return;
-  }
-  // Remove trailing ";"" to avoid syntax errors for simple one liner
-  if (code.endsWith(';')) {
-    code = code.slice(0, -1);
-  }
-  // Skip the return parameter for more complex code
-  if ((code.includes(';') && !code.includes('let')) || code.includes('{')) {
-    console.log('>>' + Function(code)());
-  } else {
-    console.log('>>' + Function('return (' + code + ');')());
+  let runCode = function(codeString) {
+    // Skip the return parameter for more complex code
+    let result = ((codeString.includes(';') && !codeString.includes('let')) ||
+      codeString.includes('{')) ? Function(codeString)() :
+      Function('return (' + codeString + ');')();
+    console.log('>>' + result);
+    return result;
+  };
+
+  let result; // Declared here to apease jslint
+  switch (typeof code) {
+    case 'string':
+      runCode(code);
+      break;
+    case 'object':
+      if (!code.hasOwnProperty('code')) {
+        console.error('Argument to executeCode_ missing property \'code\':',
+          code);
+        return;
+      }
+      if ((typeof code['code']) !== 'string') {
+        console.error('\'code\' property of argument to executeCode_ is not a'
+          + ' string:', code);
+        return;
+      }
+      result = runCode(code['code']);
+      if (code.hasOwnProperty('id') && (typeof code['id']) === 'string') {
+        this.send('__exec_result__', {
+          'id': code['id'],
+          'result': result,
+        });
+      }
+      break;
+    default:
+      console.warn('Ignoring code due to unknown type', code);
   }
 };
 
@@ -246,6 +270,9 @@ cwc.framework.Messenger.prototype.handleHandshake_ = function(data) {
     'ping_time': new Date().getTime(),
   });
   this.ready_ = this.appWindow && this.appOrigin;
+  if (this.ready_) {
+    this.senderStack_.start();
+  }
 };
 
 
@@ -272,3 +299,4 @@ cwc.framework.Messenger.prototype.handleStart_ = function() {
     this.callback_(this.scope_);
   }
 };
+});

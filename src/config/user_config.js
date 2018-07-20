@@ -26,7 +26,7 @@ goog.require('cwc.utils.Logger');
 
 
 /**
- * @enum {!string}
+ * @enum {string}
  */
 cwc.userConfigType = {
   BLOCKLY: 'blockly',
@@ -37,7 +37,7 @@ cwc.userConfigType = {
 
 
 /**
- * @enum {!string}
+ * @enum {string}
  */
 cwc.userConfigName = {
   ADVANCED_MODE: 'advanced_mode',
@@ -84,7 +84,6 @@ cwc.UserConfig = function() {
 /**
  * @return {THIS}
  * @template THIS
- * @async
  */
 cwc.UserConfig.prototype.prepare = async function() {
   await this.database_.open();

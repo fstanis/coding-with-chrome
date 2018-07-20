@@ -31,7 +31,7 @@ goog.require('goog.events.EventTarget');
  * @final
  */
 cwc.utils.Gamepad = function() {
-  /** @type {!string} */
+  /** @type {string} */
   this.name = 'Gamepad';
 
   /** @type {number} */
@@ -45,7 +45,7 @@ cwc.utils.Gamepad = function() {
   };
 
   /** @private {!goog.events.EventTarget} */
-  this.eventHandler_ = new goog.events.EventTarget();
+  this.eventTarget_ = new goog.events.EventTarget();
 
   /** @private {!cwc.utils.Logger} */
   this.log_ = new cwc.utils.Logger(this.name);
@@ -67,7 +67,7 @@ cwc.utils.Gamepad.prototype.prepare = function() {
 
 
 /**
- * @param {!number} index
+ * @param {number} index
  */
 cwc.utils.Gamepad.prototype.setGamepad = function(index) {
   this.index = index;
@@ -78,8 +78,8 @@ cwc.utils.Gamepad.prototype.setGamepad = function(index) {
 /**
  * @return {!goog.events.EventTarget}
  */
-cwc.utils.Gamepad.prototype.getEventHandler = function() {
-  return this.eventHandler_;
+cwc.utils.Gamepad.prototype.getEventTarget = function() {
+  return this.eventTarget_;
 };
 
 
@@ -97,7 +97,7 @@ cwc.utils.Gamepad.prototype.getGamepad = function(index = this.index) {
 
 /**
  * @param {number=} shift
- * @return {!number}
+ * @return {number}
  */
 cwc.utils.Gamepad.prototype.getLeftAxisAngle = function(shift) {
   return cwc.utils.Gamepad.getAngle(
@@ -112,7 +112,7 @@ cwc.utils.Gamepad.prototype.getLeftAxisAngle = function(shift) {
 cwc.utils.Gamepad.prototype.handleConnect_ = function(e) {
   this.log_.info('Gamepad connected', e['gamepad']);
   this.setGamepad(e['gamepad']['index']);
-  this.eventHandler_.dispatchEvent(
+  this.eventTarget_.dispatchEvent(
     cwc.utils.Gamepad.Events.connected(this.getGamepad()));
   this.handleTick_();
 };
@@ -127,7 +127,7 @@ cwc.utils.Gamepad.prototype.handleDisconnect_ = function(e) {
   if (this.index === e['gamepad']['index']) {
     this.index = -1;
     this.cache_['timestamp'] = -1;
-    this.eventHandler_.dispatchEvent(cwc.utils.Gamepad.Events.disconnected());
+    this.eventTarget_.dispatchEvent(cwc.utils.Gamepad.Events.disconnected());
   }
 };
 
@@ -163,7 +163,7 @@ cwc.utils.Gamepad.prototype.handleEvent_ = function(gamepad) {
     }
     if (axis !== this.cache_['axes'][mappedIndex]) {
       this.cache_['axes'][mappedIndex] = axis;
-      this.eventHandler_.dispatchEvent(cwc.utils.Gamepad.Events.axisMoved(
+      this.eventTarget_.dispatchEvent(cwc.utils.Gamepad.Events.axisMoved(
         mappedIndex, axis
       ));
       changed = true;
@@ -175,7 +175,7 @@ cwc.utils.Gamepad.prototype.handleEvent_ = function(gamepad) {
     let mappedIndex = cwc.utils.Gamepad.getIndex(index, 'buttons', gamepad);
     if (this.cache_['buttons'][mappedIndex] !== button['value']) {
       this.cache_['buttons'][mappedIndex] = button['value'];
-      this.eventHandler_.dispatchEvent(cwc.utils.Gamepad.Events.buttonPressed(
+      this.eventTarget_.dispatchEvent(cwc.utils.Gamepad.Events.buttonPressed(
         mappedIndex, button['value']
       ));
       changed = true;
@@ -184,17 +184,17 @@ cwc.utils.Gamepad.prototype.handleEvent_ = function(gamepad) {
 
   if (changed) {
     // Create an immutable version of the current cache for the event.
-    this.eventHandler_.dispatchEvent(cwc.utils.Gamepad.Events.update(
+    this.eventTarget_.dispatchEvent(cwc.utils.Gamepad.Events.update(
       /** @type {Object} */ (JSON.parse(JSON.stringify(this.cache_)))));
   }
 };
 
 
 /**
- * @param {!number} x
- * @param {!number} y
+ * @param {number} x
+ * @param {number} y
  * @param {number=} shift (default: 90)
- * @return {!number}
+ * @return {number}
  */
 cwc.utils.Gamepad.getAngle = function(x, y, shift = 90) {
   let angle = 0;
@@ -210,10 +210,10 @@ cwc.utils.Gamepad.getAngle = function(x, y, shift = 90) {
 
 /**
  * Return's mapped index for supported controllers.
- * @param {!number} index
- * @param {!string} type
+ * @param {number} index
+ * @param {string} type
  * @param {!Object} gamepad
- * @return {!number}
+ * @return {number}
  */
 cwc.utils.Gamepad.getIndex = function(index, type, gamepad) {
   if (gamepad['mapping'] === 'standard') {
