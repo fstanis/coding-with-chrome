@@ -146,6 +146,22 @@ closureBuilder.build({
 
 
 /**
+ * Messenger Standalone Framework
+ */
+closureBuilder.build({
+  name: 'cwc.framework.messenger.Standalone',
+  compress: true,
+  srcs: glob([
+    'src/frameworks/internal/messenger/standalone/*.js',
+    'src/frameworks/internal/messenger/*.js',
+    'third_party/coding-with-chrome-libraries/src/utils/stack/stack.js',
+  ]),
+  externs: [],
+  out: 'genfiles/core/frameworks/internal/messenger_standalone_framework.js',
+});
+
+
+/**
  * Phaser Framework
  */
 closureBuilder.build({

@@ -137,36 +137,34 @@ cwc.fileHandler.FileLoader.prototype.loadGDriveFileData = function(id,
  * @param {string=} filename
  * @param {Object=} fileHandler
  * @param {string=} gDriveId
- * @return {Promise}
+ * @async
+ * @export
  */
-cwc.fileHandler.FileLoader.prototype.handleFileData = function(data,
+cwc.fileHandler.FileLoader.prototype.handleFileData = async function(data,
     filename = '', fileHandler = null, gDriveId = undefined) {
-  return new Promise((resolve) => {
-    let mimeType = cwc.utils.mime.getTypeByNameAndContent(filename || '', data);
-    this.log_.info('Handle file data ... (', data.length, ') with MIME-type:',
-      mimeType);
+  let mimeType = cwc.utils.mime.getTypeByNameAndContent(filename || '', data);
+  this.log_.info('Handle file data ... (', data.length, ') with MIME-type:',
+    mimeType);
 
-    // Load compatible file mode.
-    if (mimeType === cwc.utils.mime.Type.CWC.type) {
-      this.loadCWCFile(data, filename);
-    } else {
-      this.loadRawFile(data, filename);
+  // Load compatible file mode.
+  if (mimeType === cwc.utils.mime.Type.CWC.type) {
+    await this.loadCWCFile(data, filename);
+  } else {
+    await this.loadRawFile(data, filename);
+  }
+
+  // Sets file handler for local or gDrive files
+  let fileInstance = this.helper.getInstance('file');
+  if (fileHandler) {
+    if (fileHandler.name) {
+      fileInstance.setFilename(fileHandler.name);
     }
+    fileInstance.setFileHandler(fileHandler);
+  } else if (gDriveId) {
+    fileInstance.setGDriveId(gDriveId);
+  }
 
-    // Sets file handler for local or gDrive files
-    let fileInstance = this.helper.getInstance('file');
-    if (fileHandler) {
-      if (fileHandler.name) {
-        fileInstance.setFilename(fileHandler.name);
-      }
-      fileInstance.setFileHandler(fileHandler);
-    } else if (gDriveId) {
-      fileInstance.setGDriveId(gDriveId);
-    }
-
-    this.helper.showSuccess('Loaded file ' + filename + ' successful.');
-    resolve();
-  });
+  this.helper.showSuccess('Loaded file ' + filename + ' successful.');
 };
 
 
@@ -248,22 +246,16 @@ cwc.fileHandler.FileLoader.prototype.loadCWCFile = async function(data,
 
   // Handle tutorial data
   let tutorialInstance = this.helper.getInstance('tutorial');
-  let tutorialPromise = false;
   let tutorialSpec = file.getTutorial(userLanguage);
   if (tutorialInstance && tutorialSpec) {
-    tutorialPromise = tutorialInstance.setTutorial(tutorialSpec);
+    await tutorialInstance.setTutorial(tutorialSpec);
   }
 
   // Handle sidebar icons
   let sidebarInstance = this.helper.getInstance('sidebar');
   if (sidebarInstance) {
     sidebarInstance.enableDescription(file.getDescription());
-    if (tutorialPromise) {
-      await tutorialPromise;
-      sidebarInstance.enableTutorial(tutorialInstance.hasTutorial());
-    } else {
-      sidebarInstance.enableTutorial(false);
-    }
+    sidebarInstance.enableTutorial(tutorialInstance.hasTutorial());
     sidebarInstance.enableTour(file.getTour(userLanguage));
     sidebarInstance.showLibrary(true);
     sidebarInstance.showMedia(false);

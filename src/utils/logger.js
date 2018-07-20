@@ -138,7 +138,7 @@ cwc.utils.Logger.prototype.setLogLevel = function(logLevel) {
   this.setLogger_('notice', cwc.utils.LogLevel.NOTICE, console.log);
 
   // Warn logger
-  this.setLogger_('warn', cwc.utils.LogLevel.WARNING, console.warn);
+  this.setLogger_('warn', cwc.utils.LogLevel.WARN, console.warn);
 
   // Error logger
   this.setLogger_('error', cwc.utils.LogLevel.ERROR, console.error);

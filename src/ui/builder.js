@@ -189,6 +189,13 @@ cwc.ui.Builder = function() {
   }
 };
 
+/**
+ * @return {!cwc.utils.Helper}
+ * @export
+ */
+cwc.ui.Builder.prototype.getHelper = function() {
+  return this.helper;
+};
 
 /**
  * Decorates the given node and adds the code editor.

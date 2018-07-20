@@ -222,6 +222,7 @@ cwc.utils.Helper.prototype.decorateInstance = function(name, element) {
 
 /**
  * @return {string}
+ * @export
  */
 cwc.utils.Helper.prototype.getUserLanguage = function() {
   let languageInstance = this.getInstance('language');

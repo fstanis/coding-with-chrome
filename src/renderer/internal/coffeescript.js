@@ -41,7 +41,7 @@ cwc.renderer.internal.Coffeescript = function(helper) {
 
   /** @private {!Array} */
   this.frameworks_ = [
-    cwc.framework.Internal.MESSENGER,
+    cwc.framework.Internal.MESSENGER_STANDALONE,
     cwc.framework.External.COFFEESCRIPT,
   ];
 };

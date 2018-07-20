@@ -227,7 +227,7 @@ cwc.addon.Workbench.prototype.showRelevantProjects_ = async function() {
     const mode = tagMap[tag].mode;
     const userLanguage = this.helper.getUserLanguage();
     const userLanguageName = cwc.utils.I18n.getEnglishName()[userLanguage];
-    const matchingProjects = this.filterProjectsByTag_(allProjects.filter(
+    let matchingProjects = this.filterProjectsByTag_(allProjects.filter(
       (project) => project.language == userLanguageName), tag);
 
     matchingProjects.forEach((project) => {
@@ -245,6 +245,7 @@ cwc.addon.Workbench.prototype.showRelevantProjects_ = async function() {
         this.helper.getInstance('mode')
           .loadMode(mode)
           .then(() => {
+            // Map Workbench project data structure into CwC Tutorial structure
             let tutorialSpec = {
               'url': this.projectDetailLinkBase_ + project.id,
               'description': {

@@ -128,11 +128,16 @@ cwc.ui.Tutorial.prototype.setTutorial = async function(tutorial, imagesDb) {
     await this.imagesDb_.open({'objectStoreNames': [objectStoreName]});
   }
 
-  if (!('steps' in tutorial)) {
-    this.log_.error('Tutorial has no steps: ', tutorial);
-    return;
+  let steps = [];
+  if ('steps' in tutorial) {
+    if (!Array.isArray(tutorial['steps'])) {
+      this.log_.warn('Ignoring invalid steps', tutorial['steps'],
+        '(Expecting an array)');
+    } else {
+      steps = tutorial['steps'];
+    }
   }
-  await this.parseSteps_(tutorial['steps']);
+  await this.parseSteps_(steps);
 
   this.url_ = tutorial['url'];
 
@@ -406,10 +411,24 @@ cwc.ui.Tutorial.prototype.startTutorial = function() {
 /**
  * Actions that happen after the template is rendered:
  * add event listeners, show active step, render images from DB
+ * @private
  */
 cwc.ui.Tutorial.prototype.initUI_ = function() {
-  const rootNode = goog.dom.getElement(this.prefix + 'container');
-  const nodeListImages = rootNode.querySelectorAll('.js-project-step-image');
+  this.initSteps_();
+  this.initMedia_();
+
+  let state = {};
+  if (this.steps_.length > 0) {
+    state.activeStepID = this.state_.activeStepID || this.steps_[0].id;
+  }
+  this.setState_(state);
+};
+
+/**
+ * Captures references to elements needed by the media overlay
+ * @private
+ */
+cwc.ui.Tutorial.prototype.initMediaOverlay_ = function() {
   this.nodeMediaOverlay_ = goog.dom.getElement(this.prefix + 'media-overlay');
   this.nodeMediaOverlayClose_ = goog.dom.getElement(
     this.prefix + 'media-overlay-close');
@@ -421,21 +440,17 @@ cwc.ui.Tutorial.prototype.initUI_ = function() {
       expandedMedia: null,
     });
   });
+};
 
-  let prefix = this.prefix + 'step-';
-  this.steps_.forEach((step) => {
-    const stepNode = goog.dom.getElement(prefix + step.id);
-    step.node = stepNode;
-    step.nodeContinue = stepNode.querySelector(
-        '.js-project-step-continue');
-    step.nodeHeader = stepNode.querySelector(
-        '.js-project-step-header'),
-    step.nodeListMediaExpand = stepNode.querySelectorAll(
-        '.js-project-step-media-expand');
-    step.nodeMessage = stepNode.querySelector('.'+prefix+'message');
-    goog.style.setElementShown(step.nodeMessage, false);
-  });
 
+/**
+ * Renders cached images and videos from database to DOM
+ * @private
+ */
+cwc.ui.Tutorial.prototype.initMedia_ = function() {
+  this.initMediaOverlay_();
+  let rootNode = goog.dom.getElement(this.prefix + 'container');
+  let nodeListImages = rootNode.querySelectorAll('.js-project-step-image');
   if (this.imagesDb_) {
     [].forEach.call(nodeListImages, (image) => {
       let imageSrc = image.getAttribute('data-src');
@@ -450,7 +465,35 @@ cwc.ui.Tutorial.prototype.initUI_ = function() {
       });
     });
   }
+};
 
+/**
+ * Sets initial state for each step
+ * @private
+ */
+cwc.ui.Tutorial.prototype.initSteps_ = function() {
+  let prefix = this.prefix + 'step-';
+  this.steps_.forEach((step) => {
+    let stepNode = goog.dom.getElement(prefix + step.id);
+    step.node = stepNode;
+    step.nodeContinue = stepNode.querySelector(
+        '.js-project-step-continue');
+    step.nodeHeader = stepNode.querySelector(
+        '.js-project-step-header'),
+    step.nodeListMediaExpand = stepNode.querySelectorAll(
+        '.js-project-step-media-expand');
+    step.nodeMessage = stepNode.querySelector('.'+prefix+'message');
+    goog.style.setElementShown(step.nodeMessage, false);
+  });
+  this.initStepButtons_();
+};
+
+
+/**
+ * Sets initial state for each step
+ * @private
+ */
+cwc.ui.Tutorial.prototype.initStepButtons_ = function() {
   this.steps_.forEach((step) => {
     if (step.nodeContinue) {
       goog.events.listen(step.nodeContinue, goog.events.EventType.CLICK,
@@ -464,17 +507,12 @@ cwc.ui.Tutorial.prototype.initUI_ = function() {
         this.onMediaClick_.bind(this, toggle));
     });
   });
-
-  let state = {};
-  if (this.steps_.length > 0) {
-    state.activeStepID = this.state_.activeStepID || this.steps_[0].id;
-  }
-  this.setState_(state);
 };
 
 
 /**
  * Marks the current step complete and opens the next
+ * @private
  */
 cwc.ui.Tutorial.prototype.completeCurrentStep_ = function() {
   let completedSteps = this.state_.completedSteps.slice();
@@ -495,6 +533,7 @@ cwc.ui.Tutorial.prototype.completeCurrentStep_ = function() {
 /**
  * Opens a step, but only if it is complete or next
  * @param {!number} stepID
+ * @private
  */
 cwc.ui.Tutorial.prototype.jumpToStep_ = function(stepID) {
   let canOpen = stepID === this.state_.inProgressStepID ||
@@ -531,6 +570,7 @@ cwc.ui.Tutorial.prototype.getActiveMessageNode_ = function() {
 /**
  * Shows media in a full screen overlay
  * @param {Element} button
+ * @private
  */
 cwc.ui.Tutorial.prototype.onMediaClick_ = function(button) {
   let mediaType = button.getAttribute('data-media-type');
@@ -573,6 +613,7 @@ cwc.ui.Tutorial.prototype.onMediaClick_ = function(button) {
 
 /**
  * Event fired on media overlay close button click
+ * @private
  */
 cwc.ui.Tutorial.prototype.onMediaClose_ = function() {
   this.setState_({
@@ -583,6 +624,7 @@ cwc.ui.Tutorial.prototype.onMediaClose_ = function() {
 
 /**
  * Closes media overlay
+ * @priate
  */
 cwc.ui.Tutorial.prototype.hideMedia_ = function() {
   while (this.nodeMediaOverlayContent_.firstChild) {
@@ -595,6 +637,7 @@ cwc.ui.Tutorial.prototype.hideMedia_ = function() {
 /**
  * Shows media overlay with the provided element
  * @param {!Element} media
+ * @private
  */
 cwc.ui.Tutorial.prototype.showMedia_ = function(media) {
   this.nodeMediaOverlayContent_.appendChild(media);
@@ -605,6 +648,7 @@ cwc.ui.Tutorial.prototype.showMedia_ = function(media) {
 /**
  * Updates the current state, then triggers a view update
  * @param {!Object} change
+ * @private
  */
 cwc.ui.Tutorial.prototype.setState_ = function(change) {
   let prevStepID = this.state_.activeStepID;
@@ -625,6 +669,7 @@ cwc.ui.Tutorial.prototype.setState_ = function(change) {
 
 /**
  * Updates the view to reflect the current state
+ * @private
  */
 cwc.ui.Tutorial.prototype.updateView_ = function() {
   this.steps_.forEach((step) => {
@@ -665,96 +710,61 @@ cwc.ui.Tutorial.prototype.handleConsoleMessage_ = function(event) {
  * Runs validate() each time the preview reloads
  */
 cwc.ui.Tutorial.prototype.startValidate = function() {
-  // This attempts to run in case CONTENT_LOADED has already fired
+  // This attempts to run in case CONTENT_LOAD_STOP has already fired
   this.runValidate();
-  // This runs on future CONTENT_LOADED events
+  // This runs on future CONTENT_LOAD_STOP events
   let previewInstance = this.helper.getInstance('preview');
-  goog.events.listen(previewInstance.getEventHandler(),
-    cwc.ui.PreviewEvents.Type.CONTENT_LOADED, () => {
-      this.runValidate();
-    }, false, this);
+  if (!previewInstance) {
+    this.log_.error('No preview instance');
+    return;
+  }
+  goog.events.listen(previewInstance.getEventTarget(),
+    this.webviewSupport_ ? cwc.ui.PreviewEvents.Type.CONTENT_LOAD_STOP :
+      cwc.ui.PreviewEvents.Type.CONTENT_LOADED,
+    this.runValidate.bind(this), false, this);
 };
 
 /**
  * @param {Object} preview
  */
-cwc.ui.Tutorial.prototype.runValidate = function() {
+cwc.ui.Tutorial.prototype.runValidate = async function() {
   if (!this.getActiveStep_() || !this.getActiveStep_().validate) {
     return;
   }
   let previewInstance = this.helper.getInstance('preview');
-  let preview = previewInstance.getContent();
-  if (!preview) {
-    this.log_.warn('runValidate: No preview');
+  if (!previewInstance) {
+    this.log_.warn('runValidate: No preview instance');
     return;
   }
 
-  this.log_.info('Validating preview');
+  let editorInstance = this.helper.getInstance('editor');
+  // TODO: support multiple editor views
+  let code = goog.string.quote(
+    editorInstance.getEditorContent(editorInstance.getCurrentView()));
+  let injectCode = `{ return (${this.getActiveStep_().validate})(${code}) }`;
 
-  // This will run in the preview
-  let listenForValidate = function() {
-    window.addEventListener('message', function(e) {
-      if (e.data && (typeof e.data) === 'object' &&
-          e.data.hasOwnProperty('cwc-validate-data') &&
-          (typeof window.top['cwc-validate'] == 'function')) {
-        let results = window.top['cwc-validate'](
-          e.data['cwc-validate-data']['code']);
-        e['source'].postMessage({'validateResults': results}, '*');
-      }
-    });
-    return true;
-  };
-
-  // This will run once we've defined the validation function in the preview
-  let doValidate = function(validateReturn) {
-    if (!Array.isArray(validateReturn) || validateReturn.length < 1 ||
-      validateReturn[0] !== true) {
-      this.log_.warn('Error injecting listener for tutorial preview validator',
-        'Sending message with code anyway. Error was: ', validateReturn);
-    }
-
-
-    window.addEventListener('message', (e) => {
-      if (e.data && (typeof e.data) === 'object' &&
-          e.data.hasOwnProperty('validateResults')) {
-        if (e.data['validateResults']['message']) {
-          this.setMessage(e.data['validateResults']['message']);
-        } else {
-          this.setMessage('');
-        }
-        if ('solved' in e.data['validateResults']) {
-          this.solved(e.data['validateResults']['solved']);
-        } else {
-          this.solved(false);
-        }
-      }
-    });
-
-    let editorInstance = this.helper.getInstance('editor');
-    // TODO: support multiple editor views
-    let args = {'cwc-validate-data': {'code':
-      editorInstance.getEditorContent(editorInstance.getCurrentView())}};
-    this.log_.info('Sending args', args, 'to validate()');
-    preview.contentWindow.postMessage(args, '*');
-  }.bind(this);
-
-  let setCwCValidate = 'window.top[\'cwc-validate\'] = (' +
-    this.getActiveStep_().validate + ');';
-
-  // We attempt to inject the script twice because webview has no way to check
-  // if the page load is done. If it's not, executeScript() fails. If we
-  // always listen for 'loadstop', but it's already fired, we miss it and never
-  // execute.
-  let injectedCode = setCwCValidate +
-    '(' + listenForValidate.toString() + ')()';
-  preview.addEventListener('loadstop', () => {
-    preview.executeScript({code: injectedCode}, doValidate);
-  });
+  let result;
   try {
-    preview.executeScript({code: injectedCode}, doValidate);
-  } catch (e) {
-    this.log_.info('Failed to inject results.',
-      'but it should run next time the preview changes:', e);
+    result = await previewInstance.executeScript(injectCode);
+  } catch (error) {
+    this.log_.warn('Validation script failed to run', error);
+    return;
+  }
+
+  this.log_.info('Validate script returned', result);
+  if (typeof result !== 'object') {
+    this.log_.warn('Ignoring script result because it is not an object');
+    return;
+  }
+  if ('message' in result && result['message']) {
+    this.setMessage(result['message']);
+  } else {
+    this.setMessage('');
+  }
+  if ('solved' in result) {
+    this.solved(result['solved']);
+  } else {
+    this.solved(false);
   }
 };
 
@@ -762,6 +772,7 @@ cwc.ui.Tutorial.prototype.runValidate = function() {
 /**
  * Callback for validate
  * @param {!object} results
+ * @private
  */
 cwc.ui.Tutorial.prototype.processValidateResults_ = function(results) {
   this.log_.info('processing validate results', results);
@@ -802,10 +813,8 @@ cwc.ui.Tutorial.prototype.setMessage = function(message) {
   if (message) {
     goog.soy.renderElement(node, cwc.soy.ui.Tutorial.message,
       {message: message});
-    goog.style.setElementShown(node, true);
-  } else {
-    goog.style.setElementShown(node, false);
   }
+  goog.style.setElementShown(node, message ? true : false);
 };
 
 /**
