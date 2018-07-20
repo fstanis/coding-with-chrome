@@ -63,9 +63,10 @@ let replacePlaceholders = function(obj, pwd) {
   if (obj === null || typeof obj !== 'object') {
     return;
   }
+  let templateRE = /^___TEMPLATE___:(binary:)?/;
   for (let k in obj) {
     if (!Object.prototype.hasOwnProperty.call(obj, k)) continue;
-    const matches = k.match(/^___TEMPLATE___:(binary:)?/);
+    const matches = k.match(templateRE);
     if (matches) {
       const data = matches[1] ?
         fs.readFileSync(pwd+'/'+obj[k]).toString('base64') :

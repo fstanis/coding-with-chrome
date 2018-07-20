@@ -260,6 +260,8 @@ goog.addDependency('../../../../test/genfiles/soy/src/mode/raspberry_pi/advanced
 goog.addDependency('../../../../test/genfiles/soy/src/mode/sphero/classic/panel/calibration/calibration.soy.js', ['cwc.soy.mode.sphero.classic.Calibration'], ['goog.asserts', 'soy', 'soydata'], false);
 goog.addDependency('../../../../test/genfiles/soy/src/mode/sphero/classic/panel/control/control.soy.js', ['cwc.soy.mode.sphero.classic.Control'], ['goog.asserts', 'soy', 'soydata'], false);
 goog.addDependency('../../../../test/genfiles/soy/src/mode/sphero/monitor.soy.js', ['cwc.soy.mode.sphero.Monitor'], ['goog.asserts', 'soy', 'soydata'], false);
+goog.addDependency('../../../../test/genfiles/soy/src/mode/sphero/panel/calibration/calibration.soy.js', ['cwc.soy.mode.sphero.Calibration'], ['goog.asserts', 'soy', 'soydata'], false);
+goog.addDependency('../../../../test/genfiles/soy/src/mode/sphero/panel/control/control.soy.js', ['cwc.soy.mode.sphero.Control'], ['goog.asserts', 'soy', 'soydata'], false);
 goog.addDependency('../../../../test/genfiles/soy/src/renderer/renderer.soy.js', ['cwc.soy.Renderer'], ['goog.asserts', 'soy', 'soydata'], false);
 goog.addDependency('../../../../test/genfiles/soy/src/ui/blockly/blockly.soy.js', ['cwc.soy.ui.Blockly'], ['goog.asserts', 'soy', 'soydata'], false);
 goog.addDependency('../../../../test/genfiles/soy/src/ui/blockly/toolbar/blockly_toolbar.soy.js', ['cwc.soy.ui.BlocklyToolbar'], ['cwc.soy.ui.Template', 'goog.asserts', 'soy', 'soydata'], false);
