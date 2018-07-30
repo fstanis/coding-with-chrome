@@ -17,30 +17,32 @@
  *
  * @author wangyu@makeblock.cc (Yu Wang)
  */
-goog.provide('cwc.mode.makeblock.mbot.Connection');
+goog.provide('cwc.mode.makeblock.mBot.Connection');
 
-goog.require('cwc.protocol.makeblock.mbot.Api');
+goog.require('cwc.lib.protocol.makeblock.mBot.Api');
+goog.require('cwc.lib.protocol.bluetoothChrome.profile.Device');
+goog.require('cwc.lib.protocol.makeblock.mBot.Events');
 goog.require('cwc.utils.Events');
 
 goog.require('goog.Timer');
 
 
+goog.scope(function() {
+const Api = goog.module.get('cwc.lib.protocol.makeblock.mBot.Api');
+const BluetoothProfile =
+  goog.module.get('cwc.lib.protocol.bluetoothChrome.profile.Device');
+const Events = goog.module.get('cwc.lib.protocol.makeblock.mBot.Events');
+
 /**
  * @constructor
  * @param {!cwc.utils.Helper} helper
  */
-cwc.mode.makeblock.mbot.Connection = function(helper) {
+cwc.mode.makeblock.mBot.Connection = function(helper) {
   /** @type {string} */
   this.name = 'mBot Connection';
 
-  /** @type {string} */
-  this.autoConnectName = 'Makeblock';
-
   /** @type {!cwc.utils.Helper} */
   this.helper = helper;
-
-  /** @type {!cwc.protocol.makeblock.mbot.Api} */
-  this.api_ = new cwc.protocol.makeblock.mbot.Api();
 
   /** @type {goog.Timer} */
   this.connectMonitor = null;
@@ -48,23 +50,30 @@ cwc.mode.makeblock.mbot.Connection = function(helper) {
   /** @type {number} */
   this.connectMonitorInterval = 5000;
 
+  /** @type {!cwc.protocol.makeblock.mBot.Api} */
+  this.api_ = new Api();
+
+  /** @private {!goog.events.EventTarget} */
+  this.apiEvents_ = this.api_.getEventTarget();
+
   /** @private {!cwc.utils.Events} */
   this.events_ = new cwc.utils.Events(this.name);
+
+  /** @private {!cwc.lib.protocol.bluetoothChrome.profile.Device} */
+  this.device_ = BluetoothProfile.MAKEBLOCK_MBOT;
 };
 
 
 /**
- * Connects the mbot unit.
+ * Connects the mBot unit.
  * @export
  */
-cwc.mode.makeblock.mbot.Connection.prototype.init = function() {
-  if (!this.connectMonitor) {
-    this.connectMonitor = new goog.Timer(this.connectMonitorInterval);
-    this.events_.listen(this.connectMonitor, goog.Timer.TICK,
-      this.connect.bind(this));
+cwc.mode.makeblock.mBot.Connection.prototype.init = function() {
+  if (this.apiEvents_) {
+    this.events_.listen(this.apiEvents_,
+      Events.Type.CONNECT, this.handleConnecting_.bind(this));
   }
 
-  // Unload event
   let layoutInstance = this.helper.getInstance('layout');
   if (layoutInstance) {
     this.events_.listen(layoutInstance.getEventTarget(),
@@ -78,28 +87,47 @@ cwc.mode.makeblock.mbot.Connection.prototype.init = function() {
       false, this);
   }
 
+  let bluetoothInstance = this.helper.getInstance('bluetoothChrome');
+  if (bluetoothInstance) {
+    if (bluetoothInstance.getDeviceByName(this.device_.namePrefix)) {
+      this.handleConnecting_({
+        'data': 'Searching for ' + this.device_.name,
+        'source': 1,
+      });
+    } else {
+      this.handleConnecting_({
+        'data': 'Unable to find any valid ' + this.device_.name + ' device!',
+        'source': -1,
+      });
+    }
+  }
+
+  if (!this.connectMonitor) {
+    this.connectMonitor = new goog.Timer(this.connectMonitorInterval);
+    this.events_.listen(this.connectMonitor, goog.Timer.TICK,
+      this.connect.bind(this));
+  }
+
   this.connectMonitor.start();
   this.connect();
 };
 
 
 /**
- * Connects the mbot ball.
+ * Connects the mBot robot.
  * @param {Event=} opt_event
  * @export
  */
-cwc.mode.makeblock.mbot.Connection.prototype.connect = function(opt_event) {
+cwc.mode.makeblock.mBot.Connection.prototype.connect = function(opt_event) {
   let bluetoothInstance = this.helper.getInstance('bluetoothChrome');
   if (!bluetoothInstance) {
     return;
   }
   if (!this.isConnected()) {
-    bluetoothInstance.autoConnectDevice(this.autoConnectName, function(device) {
-      if (device) {
-        this.api_.connect(device);
-      }
-    }.bind(this));
+    bluetoothInstance.autoConnectDevice(this.device_.namePrefix,
+      this.api_.connect.bind(this.api_));
   }
+  this.api_.monitor(true);
 };
 
 
@@ -107,7 +135,7 @@ cwc.mode.makeblock.mbot.Connection.prototype.connect = function(opt_event) {
  * Stops the current executions.
  * @export
  */
-cwc.mode.makeblock.mbot.Connection.prototype.stop = function() {
+cwc.mode.makeblock.mBot.Connection.prototype.stop = function() {
   let previewInstance = this.helper.getInstance('preview');
   if (previewInstance) {
     previewInstance.stop();
@@ -118,10 +146,9 @@ cwc.mode.makeblock.mbot.Connection.prototype.stop = function() {
 
 /**
  * Resets the connection.
- * @param {Event=} opt_event
  * @export
  */
-cwc.mode.makeblock.mbot.Connection.prototype.reset = function(opt_event) {
+cwc.mode.makeblock.mBot.Connection.prototype.reset = function() {
   if (this.isConnected()) {
     this.api_.reset();
   }
@@ -132,16 +159,16 @@ cwc.mode.makeblock.mbot.Connection.prototype.reset = function(opt_event) {
  * @return {boolean}
  * @export
  */
-cwc.mode.makeblock.mbot.Connection.prototype.isConnected = function() {
+cwc.mode.makeblock.mBot.Connection.prototype.isConnected = function() {
   return this.api_.isConnected();
 };
 
 
 /**
- * @return {!cwc.protocol.makeblock.mbot.Api}
+ * @return {!cwc.protocol.makeblock.mBot.Api}
  * @export
  */
-cwc.mode.makeblock.mbot.Connection.prototype.getApi = function() {
+cwc.mode.makeblock.mBot.Connection.prototype.getApi = function() {
   return this.api_;
 };
 
@@ -149,7 +176,7 @@ cwc.mode.makeblock.mbot.Connection.prototype.getApi = function() {
 /**
  * @return {goog.events.EventTarget}
  */
-cwc.mode.makeblock.mbot.Connection.prototype.getEventTarget = function() {
+cwc.mode.makeblock.mBot.Connection.prototype.getEventTarget = function() {
   return this.api_.getEventTarget();
 };
 
@@ -157,11 +184,11 @@ cwc.mode.makeblock.mbot.Connection.prototype.getEventTarget = function() {
 /**
  * Cleans up the event listener and any other modification.
  */
-cwc.mode.makeblock.mbot.Connection.prototype.cleanUp = function() {
+cwc.mode.makeblock.mBot.Connection.prototype.cleanUp = function() {
   if (this.connectMonitor) {
     this.connectMonitor.stop();
   }
-  this.api_.monitor(false);
+  this.api_.cleanUp();
   this.stop();
   this.events_.clear();
 };
@@ -171,9 +198,23 @@ cwc.mode.makeblock.mbot.Connection.prototype.cleanUp = function() {
  * @param {Event|Object} e
  * @private
  */
-cwc.mode.makeblock.mbot.Connection.prototype.handlePreviewStatus_ = function(
+cwc.mode.makeblock.mBot.Connection.prototype.handleConnecting_ = function(e) {
+  let message = e.data;
+  let step = e.source;
+  let title = 'Connecting ' + this.device_.name;
+  let connectScreenInstance = this.helper.getInstance('connectScreen');
+  connectScreenInstance.showConnectingStep(title, message, step);
+};
+
+
+/**
+ * @param {Event|Object} e
+ * @private
+ */
+cwc.mode.makeblock.mBot.Connection.prototype.handlePreviewStatus_ = function(
     e) {
   if (e.data === cwc.ui.PreviewState.STOPPED) {
     this.stop();
   }
 };
+});

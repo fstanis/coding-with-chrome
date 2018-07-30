@@ -28,10 +28,10 @@ closureBuilder.build({
   name: 'cwc.framework.lego.Ev3',
   compress: true,
   srcs: glob([
-    'src/frameworks/internal/lego/ev3/*.js',
+    'src/frameworks/lego/ev3/*.js',
   ]),
   deps: glob([
-    'src/frameworks/internal/messenger/*.js',
+    'src/frameworks/messenger/*.js',
     'src/protocol/robots/lego/ev3/*.js',
     'third_party/coding-with-chrome-libraries/src/utils/stack/stack.js',
   ]),
@@ -46,51 +46,14 @@ closureBuilder.build({
   name: 'cwc.framework.lego.WeDo2',
   compress: true,
   srcs: glob([
-    'src/frameworks/internal/lego/wedo2/*.js',
+    'src/frameworks/lego/wedo2/*.js',
   ]),
   deps: glob([
-    'src/frameworks/internal/messenger/*.js',
+    'src/frameworks/messenger/*.js',
     'src/protocol/robots/lego/wedo2/*.js',
     'third_party/coding-with-chrome-libraries/src/utils/stack/stack.js',
   ]),
   out: 'genfiles/core/frameworks/internal/wedo2_framework.js',
-});
-
-
-/**
- * Python 2.x Framework
- */
-closureBuilder.build({
-  name: 'cwc.framework.Python2',
-  compress: true,
-  srcs: [
-    'src/frameworks/internal/python/python2.js',
-  ],
-  deps: glob([
-    'src/utils/dialog/*',
-    'src/utils/logger.js',
-  ]),
-  externs: [
-    'build/externs/i18n.js',
-    'build/externs/skulpt.js',
-  ],
-  out: 'genfiles/core/frameworks/internal/python2_framework.js',
-});
-
-
-/**
- * Python 3.x Framework
- */
-closureBuilder.build({
-  name: 'cwc.framework.Python3',
-  compress: true,
-  srcs: [
-    'src/frameworks/internal/python/python3.js',
-  ],
-  externs: [
-    'build/externs/brython.js',
-  ],
-  out: 'genfiles/core/frameworks/internal/python3_framework.js',
 });
 
 
@@ -101,10 +64,10 @@ closureBuilder.build({
   name: 'cwc.framework.makeblock.mBot',
   compress: true,
   srcs: glob([
-    'src/frameworks/internal/makeblock/mbot/*.js',
+    'src/frameworks/makeblock/mbot/*.js',
   ]),
   deps: glob([
-    'src/frameworks/internal/messenger/*.js',
+    'src/frameworks/messenger/*.js',
     'third_party/coding-with-chrome-libraries/src/utils/stack/stack.js',
   ]),
   out: 'genfiles/core/frameworks/internal/mbot_framework.js',
@@ -118,10 +81,10 @@ closureBuilder.build({
   name: 'cwc.framework.makeblock.mBotRanger',
   compress: true,
   srcs: glob([
-    'src/frameworks/internal/makeblock/mbot_ranger/*.js',
+    'src/frameworks/makeblock/mbot_ranger/*.js',
   ]),
   deps: glob([
-    'src/frameworks/internal/messenger/*.js',
+    'src/frameworks/messenger/*.js',
     'third_party/coding-with-chrome-libraries/src/utils/stack/stack.js',
   ]),
   out: 'genfiles/core/frameworks/internal/mbot_ranger_framework.js',
@@ -135,7 +98,7 @@ closureBuilder.build({
   name: 'cwc.framework.Messenger',
   compress: true,
   srcs: glob([
-    'src/frameworks/internal/messenger/*.js',
+    'src/frameworks/messenger/*.js',
   ]),
   deps: glob([
     'third_party/coding-with-chrome-libraries/src/utils/stack/stack.js',
@@ -168,10 +131,10 @@ closureBuilder.build({
   name: 'cwc.framework.Phaser',
   compress: true,
   srcs: glob([
-    'src/frameworks/internal/phaser/*.js',
+    'src/frameworks/phaser/*.js',
   ]),
   deps: glob([
-    'src/frameworks/internal/messenger/*.js',
+    'src/frameworks/messenger/*.js',
     'third_party/coding-with-chrome-libraries/src/utils/stack/stack.js',
   ]),
   externs: [
@@ -182,16 +145,53 @@ closureBuilder.build({
 
 
 /**
+ * Python 2.x Framework
+ */
+closureBuilder.build({
+  name: 'cwc.framework.Python2',
+  compress: true,
+  srcs: [
+    'src/frameworks/python/python2.js',
+  ],
+  deps: glob([
+    'src/utils/dialog/*',
+    'src/utils/logger.js',
+  ]),
+  externs: [
+    'build/externs/i18n.js',
+    'build/externs/skulpt.js',
+  ],
+  out: 'genfiles/core/frameworks/internal/python2_framework.js',
+});
+
+
+/**
+ * Python 3.x Framework
+ */
+closureBuilder.build({
+  name: 'cwc.framework.Python3',
+  compress: true,
+  srcs: [
+    'src/frameworks/python/python3.js',
+  ],
+  externs: [
+    'build/externs/brython.js',
+  ],
+  out: 'genfiles/core/frameworks/internal/python3_framework.js',
+});
+
+
+/**
  * Raspberry Pi Framework
  */
 closureBuilder.build({
   name: 'cwc.framework.RaspberryPi',
   compress: true,
   srcs: glob([
-    'src/frameworks/internal/raspberry_pi/*.js',
+    'src/frameworks/raspberry_pi/*.js',
   ]),
   deps: glob([
-    'src/frameworks/internal/messenger/*.js',
+    'src/frameworks/messenger/*.js',
     'third_party/coding-with-chrome-libraries/src/utils/stack/stack.js',
   ]),
   out: 'genfiles/core/frameworks/internal/raspberry_pi_framework.js',
@@ -205,11 +205,11 @@ closureBuilder.build({
   name: 'cwc.framework.simple.Loader',
   compress: true,
   srcs: glob([
-    'src/frameworks/internal/simple/*.js',
+    'src/frameworks/simple/*.js',
   ]),
   deps: glob([
     'src/config/config.js',
-    'src/frameworks/internal/messenger/*.js',
+    'src/frameworks/messenger/*.js',
     'src/utils/dialog/*',
     'src/utils/logger.js',
     'third_party/coding-with-chrome-libraries/src/utils/stack/stack.js',
@@ -225,10 +225,10 @@ closureBuilder.build({
   name: 'cwc.framework.Sphero',
   compress: true,
   srcs: glob([
-    'src/frameworks/internal/sphero/*.js',
+    'src/frameworks/sphero/*.js',
   ]),
   deps: glob([
-    'src/frameworks/internal/messenger/*.js',
+    'src/frameworks/messenger/*.js',
     'third_party/coding-with-chrome-libraries/src/utils/stack/stack.js',
   ]),
   out: 'genfiles/core/frameworks/internal/sphero_framework.js',
@@ -242,7 +242,7 @@ closureBuilder.build({
   name: 'cwc.framework.Turtle',
   compress: true,
   srcs: glob([
-    'src/frameworks/internal/turtle/*.js',
+    'src/frameworks/turtle/*.js',
   ]),
   deps: [],
   externs: [

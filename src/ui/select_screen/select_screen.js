@@ -19,9 +19,11 @@
  */
 goog.provide('cwc.ui.SelectScreen');
 
+goog.require('cwc.lib.utils.Feature');
 goog.require('cwc.soy.SelectScreen');
 goog.require('cwc.soy.SelectScreenAdvanced');
 goog.require('cwc.soy.SelectScreenNormal');
+goog.require('cwc.ui.Infobar');
 goog.require('cwc.ui.SelectScreenWelcome');
 goog.require('cwc.utils.Events');
 goog.require('cwc.utils.Helper');
@@ -29,6 +31,9 @@ goog.require('cwc.utils.Helper');
 goog.require('goog.dom');
 goog.require('goog.events.EventTarget');
 
+
+goog.scope(function() {
+const Feature = goog.module.get('cwc.lib.utils.Feature');
 
 /**
  * @param {!cwc.utils.Helper} helper
@@ -71,6 +76,9 @@ cwc.ui.SelectScreen = function(helper) {
 
   /** @type {boolean} */
   this.prepared_ = false;
+
+  /** @type {!cwc.ui.Infobar} */
+  this.infobar_ = new cwc.ui.Infobar();
 
   /** @private {string} */
   this.resourcesPath_ = '../resources/examples/';
@@ -264,6 +272,8 @@ cwc.ui.SelectScreen.prototype.addFileHandler_ = function() {
 cwc.ui.SelectScreen.prototype.showTemplate_ = function(template) {
   if (this.nodeContent && template) {
     goog.soy.renderElement(this.nodeContent, template, {
+      bluetoothWeb: Feature.hasBluetoothWeb(),
+      bluetoothWebLight: Feature.hasBluetoothWebLight(),
       debug: this.helper.debugEnabled(),
       experimental: this.helper.experimentalEnabled(),
       modules: this.modules,
@@ -273,6 +283,7 @@ cwc.ui.SelectScreen.prototype.showTemplate_ = function(template) {
     });
     this.addFileHandler_();
     cwc.ui.Helper.mdlRefresh();
+    this.infobar_.refresh();
 
     // Event Handling
     this.eventTarget_.dispatchEvent(
@@ -346,3 +357,4 @@ cwc.ui.SelectScreen.prototype.handleFileClick_ = function(e) {
     }
   }
 };
+});

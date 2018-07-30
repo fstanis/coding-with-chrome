@@ -20,15 +20,18 @@
 goog.provide('cwc.mode.sphero.bb8.Connection');
 
 goog.require('cwc.lib.protocol.bluetoothWeb.profile.Device');
-goog.require('cwc.protocol.sphero.v1.Api');
+goog.require('cwc.lib.protocol.sphero.sprkPlus.Api');
+goog.require('cwc.lib.protocol.sphero.sprkPlus.Events');
 goog.require('cwc.utils.Events');
 
 goog.require('goog.Timer');
 
 
 goog.scope(function() {
+const Api = goog.module.get('cwc.lib.protocol.sphero.sprkPlus.Api');
 const BluetoothProfile =
   goog.module.get('cwc.lib.protocol.bluetoothWeb.profile.Device');
+const Events = goog.module.get('cwc.lib.protocol.sphero.sprkPlus.Events');
 
 /**
  * @constructor
@@ -47,8 +50,8 @@ cwc.mode.sphero.bb8.Connection = function(helper) {
   /** @type {number} */
   this.connectMonitorInterval = 5000;
 
-  /** @private {!cwc.protocol.sphero.v1.Api} */
-  this.api_ = new cwc.protocol.sphero.v1.Api();
+  /** @private {!cwc.lib.protocol.sphero.sprkPlus.Api} */
+  this.api_ = new Api();
 
   /** @private {!goog.events.EventTarget} */
   this.apiEvents_ = this.api_.getEventTarget();
@@ -67,8 +70,7 @@ cwc.mode.sphero.bb8.Connection = function(helper) {
  */
 cwc.mode.sphero.bb8.Connection.prototype.init = function() {
   if (this.apiEvents_) {
-    this.events_.listen(this.apiEvents_,
-      cwc.protocol.sphero.v1.Events.Type.CONNECT,
+    this.events_.listen(this.apiEvents_, Events.Type.CONNECT,
       this.handleConnecting_.bind(this));
   }
 

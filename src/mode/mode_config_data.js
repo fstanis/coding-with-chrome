@@ -29,14 +29,14 @@ goog.require('cwc.mode.lego.weDo2.Mod');
 goog.require('cwc.mode.html5.Mod');
 goog.require('cwc.mode.javascript.Mod');
 goog.require('cwc.mode.json.Mod');
-goog.require('cwc.mode.makeblock.mbot.Mod');
-goog.require('cwc.mode.makeblock.mbotRanger.Mod');
+goog.require('cwc.mode.makeblock.mBot.Mod');
+goog.require('cwc.mode.makeblock.mBotRanger.Mod');
 goog.require('cwc.mode.pencilCode.Mod');
 goog.require('cwc.mode.phaser.Mod');
 goog.require('cwc.mode.python.Mod');
 // goog.require('cwc.mode.raspberryPi.advanced.Mod');
-goog.require('cwc.mode.sphero.bb8.blockly.Mod');
-goog.require('cwc.mode.sphero.classic.Mod');
+goog.require('cwc.mode.sphero.bb8.Mod');
+goog.require('cwc.mode.sphero.sphero2.Mod');
 goog.require('cwc.mode.sphero.ollie.blockly.Mod');
 goog.require('cwc.mode.sphero.sprkPlus.Mod');
 goog.require('cwc.mode.text.Mod');
@@ -227,7 +227,7 @@ cwc.mode.ConfigData[cwc.mode.Type.MBOT_BLOCKLY] = new cwc.mode.Mod({
   authors: ['Yu Wang', 'Markus Bordihn'],
   icon: 'adjust',
   mime_types: [cwc.utils.mime.Type.CWC.type],
-  mod: cwc.mode.makeblock.mbot.Mod,
+  mod: cwc.mode.makeblock.mBot.Mod,
   show_blockly: true,
   name: 'mBot blockly',
   template: 'makeblock/mbot/blank-blocks.cwc',
@@ -241,7 +241,7 @@ cwc.mode.ConfigData[cwc.mode.Type.MBOT_RANGER_BLOCKLY] = new cwc.mode.Mod({
   authors: ['Yu Wang', 'Markus Bordihn'],
   icon: 'adjust',
   mime_types: [cwc.utils.mime.Type.CWC.type],
-  mod: cwc.mode.makeblock.mbotRanger.Mod,
+  mod: cwc.mode.makeblock.mBotRanger.Mod,
   show_blockly: true,
   name: 'mBot Ranger blockly',
   template: 'makeblock/mbot_ranger/blank-blocks.cwc',
@@ -341,7 +341,8 @@ cwc.mode.ConfigData[cwc.mode.Type.SPHERO_BB8_BLOCKLY] = new cwc.mode.Mod({
   authors: ['Markus Bordihn'],
   icon: 'adjust',
   mime_types: [cwc.utils.mime.Type.CWC.type],
-  mod: cwc.mode.sphero.bb8.blockly.Mod,
+  mod: cwc.mode.sphero.bb8.Mod,
+  show_blockly: true,
   name: 'Sphero BB-8 blockly',
   template: 'sphero/bb_8/blank-blocks.cwc',
 });
@@ -354,7 +355,7 @@ cwc.mode.ConfigData[cwc.mode.Type.SPHERO] = new cwc.mode.Mod({
   authors: ['Markus Bordihn'],
   icon: 'adjust',
   mime_types: [cwc.utils.mime.Type.CWC.type],
-  mod: cwc.mode.sphero.classic.Mod,
+  mod: cwc.mode.sphero.sphero2.Mod,
   name: 'Sphero 2.0',
   template: 'sphero/classic/blank.cwc',
 });
@@ -367,7 +368,7 @@ cwc.mode.ConfigData[cwc.mode.Type.SPHERO_BLOCKLY] = new cwc.mode.Mod({
   authors: ['Markus Bordihn'],
   icon: 'adjust',
   mime_types: [cwc.utils.mime.Type.CWC.type],
-  mod: cwc.mode.sphero.classic.Mod,
+  mod: cwc.mode.sphero.sphero2.Mod,
   show_blockly: true,
   name: 'Sphero 2.0 blockly',
   template: 'sphero/classic/blank-blocks.cwc',

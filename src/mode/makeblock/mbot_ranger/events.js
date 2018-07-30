@@ -17,13 +17,15 @@
  *
  * @author mbordihn@google.com (Markus Bordihn)
  */
-goog.provide('cwc.mode.makeblock.mbotRanger.SensorEvents');
-
-goog.require('cwc.protocol.makeblock.mbotRanger.Events');
+goog.provide('cwc.mode.makeblock.mBotRanger.SensorEvents');
 
 
 /**
  * @enum {string}
  */
-cwc.mode.makeblock.mbotRanger.SensorEvents =
-  cwc.protocol.makeblock.mbotRanger.Events.Type;
+cwc.mode.makeblock.mBotRanger.SensorEvents = {
+  LIGHTNESS_SENSOR: 'CHANGED_LIGHTNESS',
+  LINEFOLLOWER_SENSOR: 'CHANGED_LINEFOLLOWER',
+  TEMPERATURE_SENSOR: 'CHANGED_TEMPERATURE',
+  ULTRASONIC_SENSOR: 'CHANGED_ULTRASONIC',
+};
