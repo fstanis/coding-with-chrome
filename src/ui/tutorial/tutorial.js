@@ -745,7 +745,7 @@ cwc.ui.Tutorial.prototype.runValidate = async function() {
 
   let result;
   try {
-    result = await previewInstance.executeScript(injectCode);
+    result = await previewInstance.executeScriptWithResult(injectCode);
   } catch (error) {
     this.log_.warn('Validation script failed to run', error);
     return;

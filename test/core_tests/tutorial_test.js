@@ -20,7 +20,8 @@
 
 describe('Tutorial', function() {
   document.body.insertAdjacentHTML('afterbegin', '<div id="cwc-editor"></div>');
-  document.head.insertAdjacentHTML('afterbegin', '<link rel="stylesheet" href="css/editor.css">');
+  document.head.insertAdjacentHTML('afterbegin',
+    '<link rel="stylesheet" href="css/editor.css">');
 
   let randomString = function(maxLength = 20, minLength = 1,
     chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ' +
