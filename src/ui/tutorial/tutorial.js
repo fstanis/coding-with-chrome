@@ -821,15 +821,15 @@ cwc.ui.Tutorial.prototype.setMessage = function(message) {
  * @param {!boolean} solved
  */
 cwc.ui.Tutorial.prototype.solved = function(solved) {
-  let node = this.getActiveMessageNode_();
-  if (!node) {
-    this.log_.warn('No active message node, can\'t solved to', solved);
+  let step = this.getActiveStep_();
+  if (!step || !step.node) {
+    this.log_.warn("Failed to get active step")
     return;
   }
   if (solved) {
-    goog.dom.classlist.add(node, 'solved');
+    goog.dom.classlist.add(step.node, 'solved');
   } else {
-    goog.dom.classlist.remove(node, 'solved');
+    goog.dom.classlist.remove(step.node, 'solved');
   }
 };
 
