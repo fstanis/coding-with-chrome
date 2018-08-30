@@ -375,6 +375,7 @@ cwc.ui.Sidebar.prototype.hideContent = function() {
 
 
 /**
+ * @export
  * @param {string} contentName
  * @return {boolean}
  */
