@@ -118,11 +118,13 @@ cwc.mode.aiy.Mod.prototype.decorateTerminal = async function() {
 /**
  * Run code
  */
-cwc.mode.aiy.Mod.prototype.run = function() {
+cwc.mode.aiy.Mod.prototype.run = async function() {
   const editorInstance = this.editor.editor;
-  let pythonCode = editorInstance.getEditorContent(
-    cwc.ui.EditorContent.DEFAULT);
-  this.connection.connectAndSendCode(pythonCode);
+  const content = editorInstance.getEditorContent();
+  const pythonCode = content[cwc.ui.EditorContent.DEFAULT]
+                  || content[cwc.ui.EditorContent.PYTHON];
+  await this.connection.connectAndSendCode(pythonCode);
+  this.terminal.writeln('<starting process>');
 }
 
 

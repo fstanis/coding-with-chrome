@@ -79,6 +79,7 @@ cwc.mode.aiy.Connection.prototype.isConnected = function() {
  * @export
  */
 cwc.mode.aiy.Connection.prototype.connect = function() {
+  this.disconnect();
   return this.connectInteractive();
 };
 
