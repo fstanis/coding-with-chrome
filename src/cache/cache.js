@@ -161,6 +161,7 @@ cwc.Cache.prototype.getPreloadedFile = function(name) {
  * @return {Promise}
  */
 cwc.Cache.prototype.preloadFile = function(name) {
+  console.log(name);
   return new Promise((resolve, reject) => {
     if (this.cache_[name] !== undefined) {
       resolve();

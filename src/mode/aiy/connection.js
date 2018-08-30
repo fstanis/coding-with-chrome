@@ -1,0 +1,177 @@
+/**
+ * @fileoverview Connection for the AIY modification.
+ *
+ * @license Copyright 2018 The Coding with Chrome Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * @author fstanis@google.com (Filip Stanis)
+ */
+goog.provide('cwc.mode.aiy.Connection');
+
+goog.require('cwc.utils.Events');
+goog.require('cwc.protocol.aiy.Api');
+goog.require('cwc.protocol.mDNS.Api');
+goog.require('cwc.utils.Dialog');
+goog.require('cwc.utils.Database');
+
+/**
+ * @constructor
+ * @param {!cwc.utils.Helper} helper
+ */
+cwc.mode.aiy.Connection = function(helper) {
+  /** @type {string} */
+  this.name = 'AIY Connection';
+
+  /** @type {!cwc.utils.Helper} */
+  this.helper = helper;
+
+  /** @private {!cwc.utils.Events} */
+  this.events_ = new cwc.utils.Events(this.name);
+
+  /** @private {!cwc.protocol.aiy.Api} */
+  this.api_ = helper.getInstance('aiy', true);
+
+  /** @private {cwc.utils.Dialog} */
+  this.dialog_ = new cwc.utils.Dialog();
+
+  /** @private {!cwc.utils.Database} */
+  this.database_ = new cwc.utils.Database(this.name)
+    .setObjectStoreName('__aiy__');
+
+  /** @private {!cwc.protocol.mDNS.Api} */
+  this.mdns_ = helper.getInstance('mdns');
+};
+
+
+/**
+ * Performs init.
+ * @export
+ */
+cwc.mode.aiy.Connection.prototype.init = function() {
+  this.database_.open();
+};
+
+
+/**
+ * Connects the AIY device.
+ * @return {Promise}
+ * @export
+ */
+cwc.mode.aiy.Connection.prototype.connect = function() {
+  return this.connectInteractive();
+};
+
+
+/**
+ * Connects to the AIY if not connected and sends a message.
+ * @param {!string} data
+ * @return {!Promise}
+ * @export
+ */
+cwc.mode.aiy.Connection.prototype.connectAndSendCode = function(data) {
+  let blocker = Promise.resolve();
+  if (!this.api_.isConnected()) {
+    blocker = this.connectInteractive();
+  }
+  return blocker.then(() => this.api_.sendCode(data));
+};
+
+
+
+/**
+ * The AIY socket port.
+ * @const
+ */
+cwc.mode.aiy.Connection.PORT = '8765';
+
+
+/**
+ * The default AIY hostname.
+ * @const
+ */
+cwc.mode.aiy.Connection.DEFAULT_HOSTNAME = 'raspberrypi.local';
+
+
+/**
+ * Prompts the user for the hostname and then tries to connect to it.
+ * @return {Promise}
+ * @export
+ */
+cwc.mode.aiy.Connection.prototype.connectInteractive = async function() {
+  let host = this.findAIY_()
+         || await this.database_.get('host')
+         || cwc.mode.aiy.Connection.DEFAULT_HOSTNAME;
+
+  try {
+    host = await this.dialog_.showPrompt(
+      'Socket URL',
+      'Please type in the URL of the Raspberry Pi',
+      host
+    );
+    try {
+      const url = this.buildSocketUrl(host);
+      await this.api_.connect(url);
+      this.database_.put('host', host);
+    } catch (error) {
+      this.dialog_.showAlert('Error connecting to AIY', 'Error code: ' + error);
+      return this.connectInteractive();
+    }
+  } catch (error) {
+    // Cancelled - do nothing
+  }
+};
+
+
+/**
+ * Attempts to reconnect to the previous successful url.
+ * @return {Promise}
+ * @export
+ */
+cwc.mode.aiy.Connection.prototype.reconnect = async function() {
+  this.api_.disconnect();
+  return this.api_.reconnect().catch((err) => {
+    console.warn(`Failed to reconnect: ${err}`);
+  });
+};
+
+
+/**
+ * @return {goog.events.EventTarget}
+ */
+cwc.mode.aiy.Connection.prototype.getEventHandler = function() {
+  return this.api_.getEventHandler();
+};
+
+
+/**
+ * Attempts to use mDNS to find the AIY device.
+ * @return {String}
+ * @private
+ */
+cwc.mode.aiy.Connection.prototype.findAIY_ = function() {
+  const ip = this.mdns_.getServiceList('_aiy_cwc._tcp.local')[0];
+  return ip;
+};
+
+
+/**
+ * Builds WebSocket URL from hostname.
+ * @param {!string} hostname
+ * @return {String}
+ * @private
+ */
+cwc.mode.aiy.Connection.prototype.buildSocketUrl = function(hostname) {
+  return `ws://${hostname}:${cwc.mode.aiy.Connection.PORT}`;
+};
+
