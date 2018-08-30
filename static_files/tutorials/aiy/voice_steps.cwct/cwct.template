@@ -1,0 +1,51 @@
+{
+  "content": {
+    "__python__": {
+      "___TEMPLATE___:content": "voice.py",
+      "name": "__python__",
+      "size": 45,
+      "type": "text/x-python",
+      "version": 1
+    }
+  },
+  "files": {},
+  "flags": {},
+  "format": "Coding with Chrome File Format 3",
+  "frameworks": {},
+  "history": "",
+  "metadata": {
+    "__tutorial__": {
+      "eng": {
+        "title": "AIY",
+        "description": {
+          "___TEMPLATE___:text": "description.md",
+          "mime_type": "text/markdown"
+        },
+        "steps": [
+          {
+            "title": "Connecting",
+            "description": {
+              "___TEMPLATE___:text": "step1/text.md",
+              "mime_type": "text/markdown"
+            }
+          },
+          {
+            "title": "Upload code",
+            "description": {
+              "___TEMPLATE___:text": "step2/text.md",
+              "mime_type": "text/markdown"
+            }
+          }
+        ]
+      }
+    },
+    "__default__": {
+      "author": "Adam Carheden",
+      "title": "AIY Voice Kit",
+      "version": "1.0"
+    }
+  },
+  "mode": "aiy",
+  "ui": "default",
+  "view": "__python__"
+}
