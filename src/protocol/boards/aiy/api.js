@@ -28,7 +28,7 @@ goog.require('goog.events.EventTarget');
  * @struct
  * @final
  */
-cwc.protocol.aiy.Api = function() {
+cwc.protocol.aiy.Api = function(socket) {
   /** @type {string} */
   this.name = 'AIY';
 
@@ -36,80 +36,14 @@ cwc.protocol.aiy.Api = function() {
   this.eventHandler = new goog.events.EventTarget();
 
   /** @private {WebSocket} */
-  this.socket_ = null;
+  this.socket_ = socket;
 
-  /** @private {!boolean} */
-  this.connected_ = false;
+  /** @private {boolean} */
+  this.isRunning_ = false;
 
-  /** @private {!string} */
-  this.url_ = '';
-};
-
-
-/**
- * The socket was closed normally (no error).
- * @const
- */
-cwc.protocol.aiy.NORMAL_CLOSURE = 1000;
-
-
-/**
- * Connects to the AIY device.
- * @param {!string} url
- * @return {!Promise}
- */
-cwc.protocol.aiy.Api.prototype.connect = function(url) {
-  if (this.connected_) {
-    console.warn('Already connected to AIY, disconnect first!');
-    return Promise.reject();
-  }
-  return new Promise((resolve, reject) => {
-    const socket = new WebSocket(url);
-    socket.addEventListener('open', () => {
-      this.connected_ = true;
-      this.url_ = url;
-      this.socket_ = socket;
-      this.eventHandler.dispatchEvent(cwc.protocol.aiy.Events.connected());
-      resolve();
-    }, false);
-    socket.addEventListener('close', (event) => {
-      this.connected_ = false;
-      this.eventHandler.dispatchEvent(
-        cwc.protocol.aiy.Events.disconnected(event.code));
-      if (event.code !== cwc.protocol.aiy.NORMAL_CLOSURE) {
-        reject(new Error(`WebSocket closed with code ${event.code}`));
-      }
-    }, false);
-    socket.addEventListener('message', (event) => {
-      this.handleMessage_(event.data);
-    }, false);
-  });
-};
-
-
-/**
- * Reconnects to the AIY device.
- * @return {!Promise}
- */
-cwc.protocol.aiy.Api.prototype.reconnect = function() {
-  if (!this.url_) {
-    console.warn('Cannot reconnect; must connect first!');
-    return Promise.reject();
-  }
-  return this.connect(this.url_);
-};
-
-
-/**
- * Disconnects the AIY.
- */
-cwc.protocol.aiy.Api.prototype.disconnect = function() {
-  if (!this.connected_) {
-    console.warn('AIY is not connected, no need to disconnect!');
-    return;
-  }
-  this.connected_ = false;
-  this.socket_.close();
+  this.socket_.addEventListener('message', (event) => {
+    this.handleMessage_(event.data);
+  }, false);
 };
 
 
@@ -117,20 +51,27 @@ cwc.protocol.aiy.Api.prototype.disconnect = function() {
  * @return {!boolean}
  */
 cwc.protocol.aiy.Api.prototype.isConnected = function() {
-  return this.connected_;
+  return this.socket_.readyState !== WebSocket.OPEN;
 };
 
 
 /**
- * @param {!string} data
+ * @param {!object} data
  * @private
  */
 cwc.protocol.aiy.Api.prototype.send_ = function(data) {
-  if (!this.connected_) {
+  if (!this.isConnected()) {
     console.warn('AIY is not connected, unable to send data!');
     return;
   }
-  this.socket_.send(data);
+  if (data['type'] === 'run') {
+    if (this.isRunning_) {
+      console.warn('Attempted to send run command twice!');
+      return;
+    }
+    this.isRunning_ = true;
+  }
+  this.socket_.send(JSON.stringify(data));
 };
 
 
@@ -139,9 +80,9 @@ cwc.protocol.aiy.Api.prototype.send_ = function(data) {
  * @param {Array<string>} args
  * @export
  */
-cwc.protocol.aiy.Api.prototype.sendRun = function(code, args) {
+cwc.protocol.aiy.Api.prototype.sendPython = function(code, args) {
   args = args || [];
-  this.send_(JSON.stringify({
+  this.send_({
     'type': 'run',
     'files': {
       'main.py': code,
@@ -150,7 +91,21 @@ cwc.protocol.aiy.Api.prototype.sendRun = function(code, args) {
     'env': {
       'PYTHONUNBUFFERED': '1',
     },
-  }));
+  });
+};
+
+
+/**
+ * @param {!string} cmd
+ * @param {Array<string>} args
+ * @export
+ */
+cwc.protocol.aiy.Api.prototype.sendSudo = function(cmd, args) {
+  args = args || [];
+  this.send_({
+    'type': 'run',
+    'args': ['sudo', '-n', cmd, ...args]
+  });
 };
 
 
@@ -159,10 +114,10 @@ cwc.protocol.aiy.Api.prototype.sendRun = function(code, args) {
  * @export
  */
 cwc.protocol.aiy.Api.prototype.sendSignal = function(signum) {
-  this.send_(JSON.stringify({
+  this.send_({
     'type': 'signal',
     'signum': signum,
-  }));
+  });
 };
 
 

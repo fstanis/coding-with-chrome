@@ -19,11 +19,11 @@
  */
 goog.provide('cwc.mode.aiy.Connection');
 
-goog.require('cwc.utils.Events');
-goog.require('cwc.protocol.aiy.Api');
+goog.require('cwc.mode.aiy.Process');
 goog.require('cwc.protocol.mDNS.Api');
-goog.require('cwc.utils.Dialog');
 goog.require('cwc.utils.Database');
+goog.require('cwc.utils.Dialog');
+goog.require('cwc.utils.Events');
 
 
 /**
@@ -40,8 +40,8 @@ cwc.mode.aiy.Connection = function(helper) {
   /** @private {!cwc.utils.Events} */
   this.events_ = new cwc.utils.Events(this.name);
 
-  /** @private {!cwc.protocol.aiy.Api} */
-  this.api_ = new cwc.protocol.aiy.Api();
+  /** @private {cwc.mode.aiy.Process} */
+  this.process_ = null;
 
   /** @private {cwc.utils.Dialog} */
   this.dialog_ = new cwc.utils.Dialog();
@@ -70,7 +70,7 @@ cwc.mode.aiy.Connection.prototype.init = function() {
  * @export
  */
 cwc.mode.aiy.Connection.prototype.isConnected = function() {
-  return this.api_.isConnected();
+  return this.process_ !== null;
 };
 
 
@@ -82,10 +82,10 @@ cwc.mode.aiy.Connection.prototype.isConnected = function() {
  */
 cwc.mode.aiy.Connection.prototype.connectAndSendRun = function(data) {
   let blocker = Promise.resolve();
-  if (!this.api_.isConnected()) {
+  if (!this.isConnected()) {
     blocker = this.connectInteractive();
   }
-  return blocker.then(() => this.api_.sendRun(data));
+  return blocker.then(this.process_.runPython(data));
 };
 
 
@@ -148,9 +148,37 @@ cwc.mode.aiy.Connection.prototype.connectInteractive = async function(host) {
  * @export
  */
 cwc.mode.aiy.Connection.prototype.connect = async function(host) {
-  const url = this.buildSocketUrl(host);
-  await this.api_.connect(url);
+  const url = this.buildSocketUrl_(host);
+  const socket = await this.openSocket(url);
+  await this.disableJoyDemo_(socket);
+  this.url_ = url;
   this.database_.put('host', host);
+  this.process_ = new cwc.mode.aiy.Process(socket);
+};
+
+
+/**
+ * The socket was closed normally (no error).
+ * @const
+ */
+cwc.mode.aiy.Connection.NORMAL_CLOSURE = 1000;
+
+
+/**
+ * Opens a socket to the given url.
+ * @param {string} url
+ * @export
+ */
+cwc.mode.aiy.Connection.prototype.openSocket = async function(url) {
+  return new Promise((resolve, reject) => {
+    const socket = new WebSocket(url);
+    socket.addEventListener('open', () => resolve(socket), false);
+    socket.addEventListener('close', (event) => {
+      if (event.code !== cwc.mode.aiy.Connection.NORMAL_CLOSURE) {
+        reject(new Error(`WebSocket closed with code ${event.code}`));
+      }
+    }, false);
+  });
 };
 
 
@@ -166,37 +194,18 @@ cwc.mode.aiy.Connection.prototype.connectUSB = function() {
 
 /**
  * Attempts to reconnect to the previous successful url.
- * @export
- */
-cwc.mode.aiy.Connection.prototype.sendTerminate = function() {
-  if (this.api_.isConnected()) {
-    // 2 is SIGINT
-    this.api_.sendSignal(2);
-  }
-};
-
-
-/**
- * Attempts to reconnect to the previous successful url.
- * @export
- */
-cwc.mode.aiy.Connection.prototype.disconnect = function() {
-  if (this.api_.isConnected()) {
-    this.api_.disconnect();
-  }
-};
-
-
-/**
- * Attempts to reconnect to the previous successful url.
  * @return {Promise}
  * @export
  */
 cwc.mode.aiy.Connection.prototype.reconnect = async function() {
-  this.disconnect();
-  return this.api_.reconnect().catch((err) => {
-    console.warn(`Failed to reconnect: ${err}`);
-  });
+  if (this.process_) {
+    this.process_.terminate();
+  }
+  if (!this.url_) {
+    return;
+  }
+  const socket = await this.openSocket(this.url_);
+  this.process_ = new cwc.mode.aiy.Process(socket);
 };
 
 
@@ -204,7 +213,7 @@ cwc.mode.aiy.Connection.prototype.reconnect = async function() {
  * @return {goog.events.EventTarget}
  */
 cwc.mode.aiy.Connection.prototype.getEventHandler = function() {
-  return this.api_.getEventHandler();
+  return this.process_.getEventHandler();
 };
 
 
@@ -232,9 +241,28 @@ cwc.mode.aiy.Connection.prototype.findAIY_ = function(hint) {
  * @return {String}
  * @private
  */
-cwc.mode.aiy.Connection.prototype.buildSocketUrl = function(host) {
+cwc.mode.aiy.Connection.prototype.buildSocketUrl_ = function(host) {
   if (host.indexOf(':') > 0) {
     return `ws://${host}/spawn`;
   }
   return `ws://${host}:${cwc.mode.aiy.Connection.PORT}/spawn`;
+};
+
+
+/**
+ * @param {!WebSocket} socket
+ * @return {Promise<void>}
+ * @private
+ */
+cwc.mode.aiy.Connection.prototype.disableJoyDemo_ = async function(socket) {
+  let proc = new cwc.mode.aiy.Process(socket);
+  const status = await proc.runSudo('systemctl', ['is-active', '--quiet', 'joy_detection_demo.service']);
+  if (status === 0) {
+    const cont = await this.dialog_.showActionCancel('Warning', 'JoyDemo is running. Continue to disable it?', 'Continue');
+    if (!cont) {
+      throw new Error('Cannot continue while JoyDemo is running.');
+    }
+    proc = new cwc.mode.aiy.Process(socket);
+    await proc.runSudo('systemctl', ['stop', 'joy_detection_demo.service']);
+  }
 };

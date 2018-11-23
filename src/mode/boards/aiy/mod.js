@@ -70,7 +70,6 @@ cwc.mode.aiy.Mod.prototype.decorate = function() {
   this.decorateTerminal();
   this.connection.init();
   this.tryConnect();
-  this.initEvents();
 
   this.toolbar.on('run', this.run.bind(this));
   this.toolbar.on('disconnect', this.disconnect.bind(this));
@@ -91,14 +90,6 @@ cwc.mode.aiy.Mod.prototype.initEvents = function() {
   this.events.listen(eventHandler,
     cwc.protocol.aiy.Events.Type.EXIT,
     this.receivedExit.bind(this)
-  );
-  this.events.listen(eventHandler,
-    cwc.protocol.aiy.Events.Type.CONNECTED,
-    this.receivedConnected.bind(this)
-  );
-  this.events.listen(eventHandler,
-    cwc.protocol.aiy.Events.Type.DISCONNECTED,
-    this.receivedDisconnected.bind(this)
   );
 };
 
@@ -122,6 +113,7 @@ cwc.mode.aiy.Mod.prototype.run = async function() {
     cwc.ui.EditorContent.PYTHON);
   try {
     await this.connection.connectAndSendRun(pythonCode);
+    this.initEvents();
     this.terminal.writemetaln('<process starting>');
   } catch (error) {
     // Rethrow unless the user cancelled
@@ -153,9 +145,10 @@ cwc.mode.aiy.Mod.prototype.terminate = function() {
  * @param {Event} opt_event
  * @private
  */
-cwc.mode.aiy.Mod.prototype.tryConnect = function(opt_event) {
+cwc.mode.aiy.Mod.prototype.tryConnect = async function(opt_event) {
   try {
-    this.connection.connectUSB();
+    await this.connection.connectUSB();
+    this.initEvents();
   } catch (error) {
     // USB is not connected - proceed without connection
   }
@@ -190,24 +183,4 @@ cwc.mode.aiy.Mod.prototype.receivedDataErr = function(event) {
 cwc.mode.aiy.Mod.prototype.receivedExit = function(opt_event) {
   this.terminal.writemetaln('<process terminated>');
   this.connection.reconnect();
-};
-
-
-/**
- * Handles the connect event.
- * @param {Event} opt_event
- * @private
- */
-cwc.mode.aiy.Mod.prototype.receivedConnected = function(opt_event) {
-  this.toolbar.setStatus('Connected');
-};
-
-
-/**
- * Handles the disconnect event.
- * @param {Event} opt_event
- * @private
- */
-cwc.mode.aiy.Mod.prototype.receivedDisconnected = function(opt_event) {
-  this.toolbar.setStatus('Not connected');
 };
